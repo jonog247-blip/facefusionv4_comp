@@ -1,7 +1,7 @@
 from shutil import which
 
 from facefusion import ffmpeg_builder
-from facefusion.ffmpeg_builder import capture_video, chain, concat, convert_color_space, deep_copy_audio, deep_copy_image, deep_copy_video, enforce_pixel_format, get_encoders, keep_video_alpha, map_amf_preset, map_nvenc_preset, map_qsv_preset, restrict_color_transfer, run, seek_to, select_frame_range, select_media_range, set_audio_quality, set_audio_sample_size, set_audio_volume, set_faststart, set_hardware_accelerator, set_image_quality, set_input_fps, set_loop, set_media_resolution, set_output_format, set_pixel_format, set_start_number, set_stream_mode, set_stream_quality, set_thread_count, set_video_duration, set_video_encoder, set_video_fps, set_video_preset, set_video_quality, set_video_tag, strip_metadata
+from facefusion.ffmpeg_builder import abort_empty_stream, capture_video, chain, concat, convert_color_space, deep_copy_audio, deep_copy_image, deep_copy_video, enforce_pixel_format, get_encoders, keep_video_alpha, map_amf_preset, map_nvenc_preset, map_qsv_preset, restrict_color_transfer, run, seek_to, select_frame_range, select_media_range, set_audio_quality, set_audio_sample_size, set_audio_volume, set_faststart, set_hardware_accelerator, set_image_quality, set_input_fps, set_loop, set_media_resolution, set_output_format, set_pixel_format, set_start_number, set_stream_mode, set_stream_quality, set_thread_count, set_video_duration, set_video_encoder, set_video_fps, set_video_preset, set_video_quality, set_video_tag, strip_metadata
 
 
 def test_run() -> None:
@@ -86,6 +86,10 @@ def test_set_stream_mode() -> None:
 def test_set_stream_quality() -> None:
 	assert set_stream_quality(500) == [ '-b:v', '500k' ]
 	assert set_stream_quality(2000) == [ '-b:v', '2000k' ]
+
+
+def test_abort_empty_stream() -> None:
+	assert abort_empty_stream() == [ '-abort_on', 'empty_output_stream' ]
 
 
 def test_enforce_pixel_format() -> None:
