@@ -139,6 +139,7 @@ def before_each() -> Iterator[None]:
 	state_manager.init_item('jobs_path', get_test_jobs_directory())
 	state_manager.init_item('api_session_limit', 10)
 	state_manager.init_item('temp_frame_format', 'png')
+	state_manager.init_item('output_video_preset', 'ultrafast')
 	session_manager.API_SESSIONS.clear()
 	asset_store.delete_assets()
 
@@ -363,7 +364,6 @@ def test_upload_assets_with_faststart(test_client : TestClient) -> None:
 		assert upload_response.status_code == 201
 
 
-@pytest.mark.xfail(strict = True, raises = ValueError, reason = 'TESTING_AND_FIXING.md #5')
 def test_upload_assets_with_moov_at_end(test_client : TestClient) -> None:
 	for security_strategy in [ 'strict', 'moderate' ]:
 		state_manager.init_item('api_security_strategy', security_strategy)
@@ -385,10 +385,9 @@ def test_upload_assets_with_moov_at_end(test_client : TestClient) -> None:
 					('file', (file_name, target_file.read(), content_type))
 				])
 
-			assert upload_response.status_code == 201
+			assert upload_response.status_code == 415
 
 
-@pytest.mark.xfail(strict = True, raises = ValueError, reason = 'TESTING_AND_FIXING.md #24')
 def test_upload_assets_with_moov_at_end_audio(test_client : TestClient) -> None:
 	for security_strategy in [ 'strict', 'moderate' ]:
 		state_manager.init_item('api_security_strategy', security_strategy)
@@ -409,7 +408,7 @@ def test_upload_assets_with_moov_at_end_audio(test_client : TestClient) -> None:
 				('file', ('source-moov-end.m4a', source_file.read(), 'audio/mp4'))
 			])
 
-		assert upload_response.status_code == 201
+		assert upload_response.status_code == 415
 
 
 def test_get_assets(test_client : TestClient) -> None:
