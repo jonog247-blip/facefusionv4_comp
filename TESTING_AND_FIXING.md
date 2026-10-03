@@ -44,8 +44,8 @@ Includes the two v4 regressions, which work on master and are broken on v4.
 
 | # | Scope | Priority | Module | Bug | Fix validated |
 |---|-------|----------|--------|-----|---------------|
-| 5 | v4-only | P1 high | ffmpeg.py + apis/asset_helper.py | sanitize_video fails on moov-at-end MP4/MOV; real-world uploads crash with 500 (see 24) | yes |
-| 24 | v4-only | P1 high | asset_store.create_asset / ffprobe.extract_video_metadata + extract_audio_metadata | moov-at-end mp4, mov and m4a uploads crash with 500 (`float('N/A')`) | no, suggestion only |
+| 5 | v4-only | P1 high | ffmpeg.py + apis/asset_helper.py | ~~sanitize_video fails on moov-at-end MP4/MOV; real-world uploads crash with 500 (see 24)~~ **done on v4** (f4799193, 554e87fe) | yes |
+| 24 | v4-only | P1 high | asset_store.create_asset / ffprobe.extract_video_metadata + extract_audio_metadata | ~~moov-at-end mp4, mov and m4a uploads crash with 500 (`float('N/A')`)~~ **done on v4** (f4799193, 554e87fe) | yes |
 | 1 | v4-regression | P0 critical | workflows/to_video.py | memory strategy (default) drops original audio | yes |
 | 2 | v4-regression | P1 high | workflows/to_video.py | disk strategy trim truncates audio | yes (same diff as 1) |
 | 16 | v4-only | P1 high | apis/endpoints/stream.py | dead /stream websocket stays in store, crashes the session sweeper | no, suggestion only |
@@ -75,7 +75,7 @@ Includes the two v4 regressions, which work on master and are broken on v4.
 | 9 | master+v4 | won't fix | workflows/core.py | voice_extractor runs without a processor needing it | by design |
 
 Suggested order:
-1. **[top bug, v4-only]**: bugs 5 and 24 together. Ordinary phone, camera and editor MP4/MOV/M4A files with the index at the end crash the upload API with a 500. Users report it, and it is reproduced with replicas of their files.
+1. **[top bug, v4-only]**: ~~bugs 5 and 24 together~~ **done on v4** (f4799193, 554e87fe). Ordinary phone, camera and editor MP4/MOV/M4A files with the index at the end crash the upload API with a 500. Users report it, and it is reproduced with replicas of their files.
 2. **[v4-regression]**: bugs 1 and 2. One diff; this should unblock default runs.
 3. **[master+v4]**: bugs 4, 22, 8, 12, 6, 10, 13, 14, 20, 23 on master, then merge into v4.
 4. **[v4-only]**: bugs 16, 3, 11, 7, 15, 17, 19, 21, 18.
@@ -106,8 +106,8 @@ Every bug with a deterministic reproduction has a test in the suite marked `@pyt
 | 2 | tests/test_image_to_video.py::test_process_disk_with_trim_frame | AssertionError |
 | 3 | tests/test_ffmpeg.py::test_spawn_frames_with_trim_frame_start | AssertionError |
 | 4 | tests/test_ffmpeg.py::test_restore_audio_with_reused_output_path | AssertionError |
-| 5 | tests/test_ffmpeg.py::test_sanitize_video_with_moov_at_end | AssertionError |
-| 5, 24 | tests/test_api_assets.py::test_upload_assets_with_moov_at_end | ValueError |
+| ~~5~~ | ~~tests/test_ffmpeg.py::test_sanitize_video_with_moov_at_end~~ done on v4, replaced by test_sanitize_video_with_strict / _with_moderate | AssertionError |
+| ~~5, 24~~ | ~~tests/test_api_assets.py::test_upload_assets_with_moov_at_end~~ done on v4 | ValueError |
 | 6 | tests/test_filesystem.py::test_move_file_to_missing_directory | FileNotFoundError |
 | 7 | tests/test_workflow.py::test_conditional_get_source_audio_frame_with_frames_mode | AssertionError |
 | 8 | tests/test_ffmpeg.py::test_run_ffmpeg_without_processing | AssertionError |
@@ -115,7 +115,7 @@ Every bug with a deterministic reproduction has a test in the suite marked `@pyt
 | 21 | tests/test_store_creator.py::test_init_content_with_existing_content | AssertionError |
 | 22 | tests/test_download.py::test_conditional_download_hashes_with_invalid_hash, test_conditional_download_sources_with_invalid_source | AssertionError |
 | 23 | tests/test_download.py::test_conditional_download_with_missing_url | AssertionError |
-| 24 | tests/test_api_assets.py::test_upload_assets_with_moov_at_end_audio | ValueError |
+| ~~24~~ | ~~tests/test_api_assets.py::test_upload_assets_with_moov_at_end_audio~~ done on v4, replaced by test_sanitize_audio_with_strict / _with_moderate | ValueError |
 
 Checked against the patched copy (`regress/patched`):
 - **#1, #2, #3, #4, #6, #7, #8, #10:** turn into XPASS(strict).
@@ -343,6 +343,8 @@ Apply the same change in both functions.
 
 
 ## 5. sanitize_video fails on moov-at-end MP4 over pipe:0
+**Done on v4** (f4799193, 554e87fe): moov-at-end uploads are rejected with 415 via `abort_empty_stream()` (`-abort_on empty_output_stream`) instead of the suggested diff below; no file touches the disk.
+
 **[v4-only] · P1 high, top bug (API uploads of plain ffmpeg/camera MP4s; fix together with 24)** · `facefusion/ffmpeg.py`, `facefusion/apis/asset_helper.py`
 
 ### Evidence
@@ -950,6 +952,8 @@ Also consider having `get_static_download_size` return 0 for non-2xx responses.
 
 
 ## 24. Uploads with the index at the end crash with 500
+**Done on v4** (f4799193, 554e87fe): the empty output is now a sanitize failure, so the upload gets 415 before `create_asset` runs. The same commits also fix uploads whose extension lies about the content (e.g. audio-only `.mp4`, 500 → 415, via `-map 0:v:0` / `-map 0:a:0`) and strict mode for `.webm` (encoder chosen per format from `video_set`).
+
 **[v4-only] · P1 high, top bug (fix together with 5)** · `facefusion/apis/asset_store.py`, `facefusion/ffprobe.py`, `facefusion/ffmpeg.py` (`sanitize_video`, `sanitize_audio`)
 
 ### Evidence
