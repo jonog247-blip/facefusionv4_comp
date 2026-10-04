@@ -49,6 +49,7 @@ Includes the two v4 regressions, which work on master and are broken on v4.
 | ~~1~~ | ~~v4-regression~~ | ~~P0 critical~~ | ~~workflows/to_video.py~~ | ~~memory strategy (default) drops original audio~~ **done on v4** (2d9a5946) | ~~yes~~ |
 | ~~2~~ | ~~v4-regression~~ | ~~P1 high~~ | ~~workflows/to_video.py~~ | ~~disk strategy trim truncates audio~~ **done on v4** (2d9a5946) | ~~yes (same diff as 1)~~ |
 | ~~16~~ | ~~v4-only~~ | ~~P1 high~~ | ~~apis/endpoints/stream.py~~ | ~~dead /stream websocket stays in store, crashes the session sweeper~~ **done on v4** (999283b8) | ~~yes~~ |
+| ~~18~~ | ~~v4-only~~ | ~~P3 low~~ | ~~rtc.py~~ | ~~create_sdp_offer / create_sdp_answer return '' instead of None~~ **done on v4** (5896fbc3) | ~~yes~~ |
 | 3 | v4-only | P2 medium | ffmpeg.spawn_frames | audio-to-image trim start yields truncated video | yes |
 | 11 | v4-only | P2 medium | ffmpeg.replace_audio | audio-to-image trim: audio track not offset (lip desync) | no, suggestion only |
 | 7 | v4-only | P2 medium | workflows/core.py | as-frames mode gets empty source audio/voice | yes |
@@ -56,7 +57,6 @@ Includes the two v4 regressions, which work on master and are broken on v4.
 | 15 | v4-only | P2 medium | codecs/aom_decoder.py | AV1 decode uses padded size, junk edges on non-multiple-of-8 frames | no, suggestion only |
 | 17 | v4-only | P2 medium | codecs/vpx_encoder.py + apis/stream_video.py | VP8 resolution growth fails silently, config already overwritten | no, suggestion only |
 | 21 | v4-only | P2 medium | store_creator.init_content | init() resets an existing session entry instead of being idempotent | no, suggestion only |
-| 18 | v4-only | P3 low | rtc.py | create_sdp_offer / create_sdp_answer return '' instead of None | no, suggestion only |
 
 ### master+v4 (fix on master, merge into v4)
 
@@ -78,7 +78,7 @@ Suggested order:
 1. **[top bug, v4-only]**: ~~bugs 5 and 24 together~~ **done on v4** (f4799193, 554e87fe). Ordinary phone, camera and editor MP4/MOV/M4A files with the index at the end crash the upload API with a 500. Users report it, and it is reproduced with replicas of their files.
 2. **[v4-regression]**: ~~bugs 1 and 2. One diff; this should unblock default runs.~~ **done on v4** (2d9a5946).
 3. **[master+v4]**: bugs 4, ~~22~~, ~~8~~, ~~12~~, 6, 10, 13, ~~14~~, 20, ~~23~~ on master, then merge into v4. 22 and 23 are **done on patch-3.9.2** (e34d4f47) and **done on v4** (14b8534d). 14 is **done on patch-3.9.2** (8e919da1) and **done on v4** (c04e6d3c). 12 is **done on v4** (c04e6d3c), still open on master. 8 is **won't fix**, by design.
-4. **[v4-only]**: bugs ~~16~~ (**done on v4**, 999283b8), 3, 11, 7, 15, 17, 19, 21, 18.
+4. **[v4-only]**: bugs ~~16~~ (**done on v4**, 999283b8), 3, 11, 7, 15, 17, 19, 21, ~~18~~ (**done on v4**, 5896fbc3).
 
 Bugs 12 to 24 were added later, from the 95% coverage push and the xfail work. They have not gone through the patched-copy validation yet. 12, 13, 14 and 20 were reproduced on both trees with the same result. For 15 to 18, `git cat-file` and `git grep` on `origin/master` confirm that their files, and any aom, vpx, libdatachannel or websocket code, do not exist on master.
 
@@ -809,7 +809,9 @@ A more thorough option is to walk all parents, or to bail out in `init_jobs` whe
 `tests/test_ffmpeg.py`: call `process_manager.stop()`, then run a long `testsrc` command through `run_ffmpeg_with_progress`. Assert that `process.wait(timeout = 5)` returns, meaning ffmpeg was terminated. Call `process_manager.end()` afterwards.
 
 
-## 18. create_sdp_offer / create_sdp_answer never return None
+## ~~18. create_sdp_offer / create_sdp_answer never return None~~
+**Done on v4** (5896fbc3): both functions check `rtcGetLocalDescription(...) > 0`. On a deleted peer connection it returns `-1`, which is truthy, so they returned `''`; now they return None. `tests/test_rtc.py` asserts `rtcDeletePeerConnection(...) == 0` and then calls `create_sdp_offer` / `create_sdp_answer` on that deleted connection. No visible API change: the `/stream` endpoint already answered 404 for an empty SDP.
+
 **[v4-only] · P3 low** · `facefusion/rtc.py`
 
 ### Evidence
