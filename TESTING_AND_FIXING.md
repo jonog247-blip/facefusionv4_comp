@@ -98,7 +98,7 @@ The one patched failure is `test_merge_video`. It also fails on unpatched v4, be
 Every bug with a deterministic reproduction has a test in the suite marked `@pytest.mark.xfail(strict = True, raises = <exception>, reason = 'TESTING_AND_FIXING.md #N')`. It asserts the correct behaviour, so the suite stays green while the bug exists.
 
 - **When a fix lands, the test passes.** `strict = True` turns that XPASS into a failure, which is the signal to remove the marker.
-- **If a fix fails some other way, the test fails visibly.** `raises` limits `xfail` to the exception the bug produces today. For example, the #5 fix changes the `sanitize_video` signature, so its test then fails with a `TypeError` and has to be updated.
+- **If a fix fails some other way, the test fails visibly.** `raises` limits `xfail` to the exception the bug produces today. ~~For example, the #5 fix changes the `sanitize_video` signature, so its test then fails with a `TypeError` and has to be updated.~~ done on v4
 
 | # | Test | Raises today |
 |---|------|--------------|
@@ -107,7 +107,7 @@ Every bug with a deterministic reproduction has a test in the suite marked `@pyt
 | 3 | tests/test_ffmpeg.py::test_spawn_frames_with_trim_frame_start | AssertionError |
 | 4 | tests/test_ffmpeg.py::test_restore_audio_with_reused_output_path | AssertionError |
 | ~~5~~ | ~~tests/test_ffmpeg.py::test_sanitize_video_with_moov_at_end~~ done on v4, replaced by test_sanitize_video_with_strict / _with_moderate | AssertionError |
-| ~~5, 24~~ | ~~tests/test_api_assets.py::test_upload_assets_with_moov_at_end~~ done on v4 | ValueError |
+| ~~5, 24~~ | ~~tests/test_api_assets.py::test_upload_assets_with_moov_at_end~~ done on v4, test_upload_assets_with_moov_at_end and _audio now assert 415 | ValueError |
 | 6 | tests/test_filesystem.py::test_move_file_to_missing_directory | FileNotFoundError |
 | 7 | tests/test_workflow.py::test_conditional_get_source_audio_frame_with_frames_mode | AssertionError |
 | 8 | tests/test_ffmpeg.py::test_run_ffmpeg_without_processing | AssertionError |
@@ -119,7 +119,7 @@ Every bug with a deterministic reproduction has a test in the suite marked `@pyt
 
 Checked against the patched copy (`regress/patched`):
 - **#1, #2, #3, #4, #6, #7, #8, #10:** turn into XPASS(strict).
-- **#5:** fails with a `TypeError` because of the signature change.
+- ~~**#5:** fails with a `TypeError` because of the signature change.~~ done on v4
 - **#21, #22, #23:** not patched there, so they stay xfail.
 
 On the current tree the tests touched by this work report 86 passed and 12 xfailed; with #23 added, `test_download.py` has 3 xfailed.
@@ -342,7 +342,7 @@ Apply the same change in both functions.
 - A matching voice-frame assertion needs the kim_vocal model, so it fits the existing voice test setup.
 
 
-## 5. sanitize_video fails on moov-at-end MP4 over pipe:0
+## ~~5. sanitize_video fails on moov-at-end MP4 over pipe:0~~
 **Done on v4** (f4799193, 554e87fe): moov-at-end uploads are rejected with 415 via `abort_empty_stream()` (`-abort_on empty_output_stream`) instead of the suggested diff below; no file touches the disk.
 
 **[v4-only] · P1 high, top bug (API uploads of plain ffmpeg/camera MP4s; fix together with 24)** · `facefusion/ffmpeg.py`, `facefusion/apis/asset_helper.py`
@@ -951,7 +951,7 @@ Also consider having `get_static_download_size` return 0 for non-2xx responses.
 `tests/test_download.py::test_conditional_download_with_missing_url`.
 
 
-## 24. Uploads with the index at the end crash with 500
+## ~~24. Uploads with the index at the end crash with 500~~
 **Done on v4** (f4799193, 554e87fe): the empty output is now a sanitize failure, so the upload gets 415 before `create_asset` runs. The same commits also fix uploads whose extension lies about the content (e.g. audio-only `.mp4`, 500 → 415, via `-map 0:v:0` / `-map 0:a:0`) and strict mode for `.webm` (encoder chosen per format from `video_set`).
 
 **[v4-only] · P1 high, top bug (fix together with 5)** · `facefusion/apis/asset_store.py`, `facefusion/ffprobe.py`, `facefusion/ffmpeg.py` (`sanitize_video`, `sanitize_audio`)
