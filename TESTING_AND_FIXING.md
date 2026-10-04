@@ -63,7 +63,7 @@ Includes the two v4 regressions, which work on master and are broken on v4.
 | # | Scope | Priority | Module | Bug | Fix validated |
 |---|-------|----------|--------|-----|---------------|
 | 4 | master+v4 | P1 high | ffmpeg.py (ffprobe cache) | stale cached temp video metadata across jobs | yes |
-| 22 | master+v4 | P2 medium | download.conditional_download_hashes / _sources | failed download leaves the process in checking, later calls wait forever | no, suggestion only |
+| 22 | master+v4 | P2 medium | download.conditional_download_hashes / _sources | ~~failed download leaves the process in checking, later calls wait forever~~ **done on patch-3.9.2** (e34d4f47), **done on v4** (14b8534d) | yes |
 | 8 | master+v4 | P2 medium | ffmpeg.run_ffmpeg | returncode None outside processing state | yes |
 | 12 | master+v4 | P2 medium | ffmpeg.log_debug | `--log-level debug` closes ffmpeg stdout, encoder detection crashes | no, suggestion only |
 | 6 | master+v4 | P3 low | filesystem.move_file | missing output dir raises FileNotFoundError | yes |
@@ -71,13 +71,13 @@ Includes the two v4 regressions, which work on master and are broken on v4.
 | 13 | master+v4 | P3 low | jobs/job_manager.init_jobs | jobs path that is a file raises NotADirectoryError | no, suggestion only |
 | 14 | master+v4 | P3 low | ffmpeg.run_ffmpeg_with_progress | already stopped run leaves ffmpeg running | no, suggestion only |
 | 20 | master+v4 | P3 low | core.conditional_process | mismatched --workflow-mode exits 1 without an error message | no, suggestion only |
-| 23 | master+v4 | P3 low | curl_builder.run / download.conditional_download | HTTP error body (e.g. 404 "Not Found") is saved as the downloaded file | no, suggestion only |
+| 23 | master+v4 | P3 low | curl_builder.run / download.conditional_download | ~~HTTP error body (e.g. 404 "Not Found") is saved as the downloaded file~~ **done on patch-3.9.2** (e34d4f47), **done on v4** (14b8534d) | yes |
 | 9 | master+v4 | won't fix | workflows/core.py | voice_extractor runs without a processor needing it | by design |
 
 Suggested order:
 1. **[top bug, v4-only]**: ~~bugs 5 and 24 together~~ **done on v4** (f4799193, 554e87fe). Ordinary phone, camera and editor MP4/MOV/M4A files with the index at the end crash the upload API with a 500. Users report it, and it is reproduced with replicas of their files.
 2. **[v4-regression]**: ~~bugs 1 and 2. One diff; this should unblock default runs.~~ **done on v4** (2d9a5946).
-3. **[master+v4]**: bugs 4, 22, 8, 12, 6, 10, 13, 14, 20, 23 on master, then merge into v4.
+3. **[master+v4]**: bugs 4, ~~22~~, 8, 12, 6, 10, 13, 14, 20, ~~23~~ on master, then merge into v4. 22 and 23 are **done on patch-3.9.2** (e34d4f47) and **done on v4** (14b8534d).
 4. **[v4-only]**: bugs ~~16~~ (**done on v4**, 999283b8), 3, 11, 7, 15, 17, 19, 21, 18.
 
 Bugs 12 to 24 were added later, from the 95% coverage push and the xfail work. They have not gone through the patched-copy validation yet. 12, 13, 14 and 20 were reproduced on both trees with the same result. For 15 to 18, `git cat-file` and `git grep` on `origin/master` confirm that their files, and any aom, vpx, libdatachannel or websocket code, do not exist on master.
@@ -113,8 +113,8 @@ Every bug with a deterministic reproduction has a test in the suite marked `@pyt
 | 8 | tests/test_ffmpeg.py::test_run_ffmpeg_without_processing | AssertionError |
 | 10 | tests/test_video_manager.py::test_conditional_seek_video_reader_with_negative_frame_index | AssertionError |
 | 21 | tests/test_store_creator.py::test_init_content_with_existing_content | AssertionError |
-| 22 | tests/test_download.py::test_conditional_download_hashes_with_invalid_hash, test_conditional_download_sources_with_invalid_source | AssertionError |
-| 23 | tests/test_download.py::test_conditional_download_with_missing_url | AssertionError |
+| ~~22~~ | ~~tests/test_download.py::test_conditional_download_hashes_with_invalid_hash, test_conditional_download_sources_with_invalid_source~~ done, merged into test_conditional_download_hashes / _sources, marker removed | AssertionError |
+| ~~23~~ | ~~tests/test_download.py::test_conditional_download_with_missing_url~~ done, merged into test_conditional_download, marker removed | AssertionError |
 | ~~24~~ | ~~tests/test_api_assets.py::test_upload_assets_with_moov_at_end_audio~~ done on v4, replaced by test_sanitize_audio_with_strict / _with_moderate | ValueError |
 
 Checked against the patched copy (`regress/patched`):
@@ -901,7 +901,9 @@ v4 has no `reset_content`, so `init()` and `clear()` behave the same. A second `
 The store modules' `clear()` then calls `reset_content`. Fixtures that reset with `init()` need to switch to `clear()`.
 
 
-## 22. A failed download leaves the process in "checking"
+## ~~22. A failed download leaves the process in "checking"~~
+**Done on patch-3.9.2** (e34d4f47), **done on v4** (14b8534d): `conditional_download_hashes` and `conditional_download_sources` call `process_manager.end()` on every path, so a failed validation returns False with the state back to pending.
+
 **[master+v4] · P2 medium** · `facefusion/download.py`
 
 ### Evidence
@@ -933,7 +935,9 @@ Make the same change in `conditional_download_sources`.
 `tests/test_download.py::test_conditional_download_hashes_with_invalid_hash` and `test_conditional_download_sources_with_invalid_source`.
 
 
-## 23. HTTP error body is saved as the downloaded file
+## ~~23. HTTP error body is saved as the downloaded file~~
+**Done on patch-3.9.2** (e34d4f47), **done on v4** (14b8534d): `curl_builder.run` passes `--fail`, and `get_static_download_size` only reads `content-length` when curl exits 0. Both are required: with `-I` and `--fail` curl still prints the 404 headers (`content-length: 9`) and only sets exit code 22, so `--fail` alone made `conditional_download` wait forever for 9 bytes. A missing `.onnx` now reports size 0, writes no file, and the source check returns False.
+
 **[master+v4] · P3 low** · `facefusion/curl_builder.py`, `facefusion/download.py`
 
 ### Evidence
