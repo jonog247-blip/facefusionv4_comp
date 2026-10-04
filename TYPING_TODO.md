@@ -13,9 +13,59 @@ Every item was checked against local `v4` (0d86dd61, after the "make mypy happy"
 Scope (where to fix):
 - **[master+v4]**: the issue exists on both. Fix on master, merge forward into v4. Master line numbers are given where they differ.
 - **[v4-only]**: the code does not exist on master. Fix on v4.
-- **[master-only]**: none of the items below. Master has extra findings not covered by this document: unused ignores in `args.py:110, 118`, `state_manager.py:10, 29`, `uis/components/job_runner.py:87`, `uis/components/instant_runner.py:95`, plus real gradio errors in `uis/core.py:80`, `uis/components/benchmark_options.py:30, 42` and `uis/components/face_selector.py:69, 74`.
+- **[master-only]**: the issue exists on master only. Fix on master.
 
 Done items are struck through with the v4 commit that fixed them. None of the items below is done on v4: the mypy commits fixed other ignores (`asset_helper.py`, `endpoints/assets.py`, `endpoints/jobs.py`, `job_manager.py`, `normalizer.py`, `ffmpeg.py` encoder set), and 7d0884cb added the ignores for 2.5 and 2.6.
+
+
+## Summary
+
+### v4-only (fix on v4)
+
+| # | Scope | Module | Ignores | Fix |
+|---|-------|--------|---------|-----|
+| 2.1 | v4-only | state_manager.collect_state | 1 | cast |
+| 2.3 | v4-only | ffmpeg.sanitize_video | 1 | cast, plus a decision on `avi`, `mpeg`, `mxf`, `wmv` |
+| 2.4 | v4-only | workflows/audio_to_image.py, audio_to_image_as_frames.py, image_to_video_as_frames.py | 3 | annotate the task list |
+| 2.7 | v4-only | apis/stream_event.py | 2 | `setattr` |
+| 2.8 | v4-only | tests/test_state_manager.py | 1 | cast |
+| 2.9 | v4-only | tests/test_api_stream_video.py | 1 | cast |
+| ~~-~~ | ~~v4-only~~ | ~~apis/asset_helper.validate_asset_files~~ | ~~3~~ | ~~cast `file_format`~~ **done on v4** (e832fa40) |
+| ~~-~~ | ~~v4-only~~ | ~~apis/endpoints/assets.get_asset~~ | ~~2~~ | ~~cast the asset~~ **done on v4** (0d86dd61) |
+| ~~-~~ | ~~v4-only~~ | ~~apis/endpoints/assets.py, apis/endpoints/jobs.py, apis/stream_audio.py~~ | ~~0, errors~~ | ~~cast query params, no reassignment~~ **done on v4** (b5801186) |
+| ~~-~~ | ~~v4-only~~ | ~~ffmpeg.run_ffmpeg_with_progress~~ | ~~0, error since mypy 2.4.0~~ | ~~no reassignment~~ **done on v4** (6478ef24) |
+
+### master+v4 (fix on master, merge into v4)
+
+| # | Scope | Module | Ignores | Fix |
+|---|-------|--------|---------|-----|
+| 1 | master+v4 | types.py, face_masker.py, face_aligner.py, face_helper.py, frame_colorizer, image_to_video.py | 11 | delete, unused |
+| 2.2 | master+v4 | state_manager.init_item / set_item | 2 | cast, port by hand (master uses `STATE_SET`) |
+| 2.4 | master+v4 | workflows/image_to_image.py | 1 | annotate the task list |
+| 2.5 | master+v4 | face_masker.create_area_mask | 1 | `astype(numpy.float32)`, master reports it as an error today |
+| 2.6 | master+v4 | audio.extract_audio_frames | 1 | `tolist()`, master reports it as an error today |
+| ~~-~~ | ~~master+v4~~ | ~~ffmpeg.get_available_encoder_set~~ | ~~3~~ | ~~cast the encoder~~ **done on v4** (0d86dd61), master still has 4 (`ffmpeg.py:142, 143, 148, 149`) |
+| ~~-~~ | ~~master+v4~~ | ~~jobs/job_manager.read_job_file, create_job_file, update_job_file~~ | ~~3~~ | ~~cast `Job` / `Content`~~ **done on v4** (0d86dd61), master still has them (`job_manager.py:210, 218, 227`) |
+| ~~-~~ | ~~master+v4~~ | ~~normalizer.normalize_color, normalize_space~~ | ~~8~~ | ~~unused~~ **done on v4** (0d86dd61), master still has them |
+
+### master-only (fix on master)
+
+Found by the same mypy run, not covered by the sections below.
+
+| Scope | Module | Finding |
+|-------|--------|---------|
+| master-only | args.py:110, 118 | unused ignores |
+| master-only | state_manager.py:10, 29 | unused ignores |
+| master-only | uis/components/job_runner.py:87 | unused ignore |
+| master-only | uis/components/instant_runner.py:95 | unused ignore |
+| master-only | uis/core.py:80 | gradio type error |
+| master-only | uis/components/benchmark_options.py:30, 42 | gradio type errors |
+| master-only | uis/components/face_selector.py:69, 74 | gradio type errors |
+
+Suggested order:
+1. **[master+v4]**: section 1, 2.2, 2.4 (`image_to_image.py`), 2.5 and 2.6 on master, together with the master-only findings, then merge into v4. 2.5 and 2.6 are real errors on master today.
+2. **[v4-only]**: 2.1, 2.3, 2.4 (the other three workflow files), 2.7, 2.8 and 2.9 on v4.
+3. **CI**: install the requirements in the lint job and enable `warn_unused_ignores` once both branches are clean, see below.
 
 
 ## Why CI did not see these
