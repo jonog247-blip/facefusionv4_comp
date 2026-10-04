@@ -64,20 +64,20 @@ Includes the two v4 regressions, which work on master and are broken on v4.
 |---|-------|----------|--------|-----|---------------|
 | ~~22~~ | ~~master+v4~~ | ~~P2 medium~~ | ~~download.conditional_download_hashes / _sources~~ | ~~failed download leaves the process in checking, later calls wait forever~~ **done on patch-3.9.2** (e34d4f47), **done on v4** (14b8534d) | ~~yes~~ |
 | ~~23~~ | ~~master+v4~~ | ~~P3 low~~ | ~~curl_builder.run / download.conditional_download~~ | ~~HTTP error body (e.g. 404 "Not Found") is saved as the downloaded file~~ **done on patch-3.9.2** (e34d4f47), **done on v4** (14b8534d) | ~~yes~~ |
+| ~~8~~ | ~~master+v4~~ | ~~P2 medium~~ | ~~ffmpeg.run_ffmpeg~~ | ~~returncode None outside processing state~~ **won't fix**, by design (consumers outside processing handle the process themselves) | ~~yes~~ |
+| ~~14~~ | ~~master+v4~~ | ~~P3 low~~ | ~~ffmpeg.run_ffmpeg_with_progress~~ | ~~already stopped run leaves ffmpeg running~~ **done on patch-3.9.2** (8e919da1) | ~~yes~~ |
 | 4 | master+v4 | P1 high | ffmpeg.py (ffprobe cache) | stale cached temp video metadata across jobs | yes |
-| 8 | master+v4 | P2 medium | ffmpeg.run_ffmpeg | returncode None outside processing state | yes |
 | 12 | master+v4 | P2 medium | ffmpeg.log_debug | `--log-level debug` closes ffmpeg stdout, encoder detection crashes | no, suggestion only |
 | 6 | master+v4 | P3 low | filesystem.move_file | missing output dir raises FileNotFoundError | yes |
 | 10 | master+v4 | P3 low | video_manager.py | negative reference frame index desyncs reader | yes |
 | 13 | master+v4 | P3 low | jobs/job_manager.init_jobs | jobs path that is a file raises NotADirectoryError | no, suggestion only |
-| 14 | master+v4 | P3 low | ffmpeg.run_ffmpeg_with_progress | already stopped run leaves ffmpeg running | no, suggestion only |
 | 20 | master+v4 | P3 low | core.conditional_process | mismatched --workflow-mode exits 1 without an error message | no, suggestion only |
 | 9 | master+v4 | won't fix | workflows/core.py | voice_extractor runs without a processor needing it | by design |
 
 Suggested order:
 1. **[top bug, v4-only]**: ~~bugs 5 and 24 together~~ **done on v4** (f4799193, 554e87fe). Ordinary phone, camera and editor MP4/MOV/M4A files with the index at the end crash the upload API with a 500. Users report it, and it is reproduced with replicas of their files.
 2. **[v4-regression]**: ~~bugs 1 and 2. One diff; this should unblock default runs.~~ **done on v4** (2d9a5946).
-3. **[master+v4]**: bugs 4, ~~22~~, 8, 12, 6, 10, 13, 14, 20, ~~23~~ on master, then merge into v4. 22 and 23 are **done on patch-3.9.2** (e34d4f47) and **done on v4** (14b8534d).
+3. **[master+v4]**: bugs 4, ~~22~~, ~~8~~, 12, 6, 10, 13, ~~14~~, 20, ~~23~~ on master, then merge into v4. 22 and 23 are **done on patch-3.9.2** (e34d4f47) and **done on v4** (14b8534d). 14 is **done on patch-3.9.2** (8e919da1). 8 is **won't fix**, by design.
 4. **[v4-only]**: bugs ~~16~~ (**done on v4**, 999283b8), 3, 11, 7, 15, 17, 19, 21, 18.
 
 Bugs 12 to 24 were added later, from the 95% coverage push and the xfail work. They have not gone through the patched-copy validation yet. 12, 13, 14 and 20 were reproduced on both trees with the same result. For 15 to 18, `git cat-file` and `git grep` on `origin/master` confirm that their files, and any aom, vpx, libdatachannel or websocket code, do not exist on master.
@@ -109,11 +109,11 @@ Every bug with a deterministic reproduction has a test in the suite marked `@pyt
 | ~~22~~ | ~~tests/test_download.py::test_conditional_download_hashes_with_invalid_hash, test_conditional_download_sources_with_invalid_source~~ done, merged into test_conditional_download_hashes / _sources, marker removed | AssertionError |
 | ~~23~~ | ~~tests/test_download.py::test_conditional_download_with_missing_url~~ done, merged into test_conditional_download, marker removed | AssertionError |
 | ~~24~~ | ~~tests/test_api_assets.py::test_upload_assets_with_moov_at_end_audio~~ done on v4, replaced by test_sanitize_audio_with_strict / _with_moderate | ValueError |
+| ~~8~~ | ~~tests/test_ffmpeg.py::test_run_ffmpeg_without_processing~~ won't fix, by design; remove the test together with its marker | AssertionError |
 | 3 | tests/test_ffmpeg.py::test_spawn_frames_with_trim_frame_start | AssertionError |
 | 4 | tests/test_ffmpeg.py::test_restore_audio_with_reused_output_path | AssertionError |
 | 6 | tests/test_filesystem.py::test_move_file_to_missing_directory | FileNotFoundError |
 | 7 | tests/test_workflow.py::test_conditional_get_source_audio_frame_with_frames_mode | AssertionError |
-| 8 | tests/test_ffmpeg.py::test_run_ffmpeg_without_processing | AssertionError |
 | 10 | tests/test_video_manager.py::test_conditional_seek_video_reader_with_negative_frame_index | AssertionError |
 | 21 | tests/test_store_creator.py::test_init_content_with_existing_content | AssertionError |
 
@@ -496,7 +496,9 @@ On master, port this as the same line in `restore_audio` and `replace_audio`.
 - patched: passes.
 
 
-## 8. run_ffmpeg returns returncode None outside the processing state
+## ~~8. run_ffmpeg returns returncode None outside the processing state~~
+**Won't fix, by design.** `run_ffmpeg` is meant to run inside the processing state, where it waits for ffmpeg. The two consumers that call it outside processing handle the process themselves: `get_available_encoder_set` reads `process.stdout`, and `uis/overrides` calls `process.communicate()`. The four `.returncode == 0` callers only run as workflow tasks inside processing. Waiting or draining in the runner breaks the consumers: `process.communicate()` in `run_ffmpeg` closed stdout and crashed `get_available_encoder_set` at program start (`ValueError: readline of closed file`). Who waits and who drains is part of `FFMPEG_REFACTOR.md` for v4.
+
 **[master+v4] · P2 medium (latent false failures)** · `facefusion/ffmpeg.py`
 
 ### Evidence
@@ -772,7 +774,9 @@ A more thorough option is to walk all parents, or to bail out in `init_jobs` whe
 `tests/test_job_manager.py` `test_init_jobs`: create a file, pass its path as `jobs_path`, and assert that `init_jobs` returns False.
 
 
-## 14. An already stopped run leaves ffmpeg running
+## ~~14. An already stopped run leaves ffmpeg running~~
+**Done on patch-3.9.2** (8e919da1): `run_ffmpeg_with_progress` ends with the same `if process_manager.is_stopping(): process.terminate()` as `run_ffmpeg`; waiting and draining stay with the consumers. The real-world window is a cancel that lands between two workflow tasks. `tests/test_ffmpeg.py` `test_run_ffmpeg_with_progress` and `test_run_ffmpeg` start a 30s `testsrc` run while stopping and assert `process.wait(timeout = 5)` returns. Not on v4 yet.
+
 **[master+v4] · P3 low** · `facefusion/ffmpeg.py`
 
 ### Evidence
