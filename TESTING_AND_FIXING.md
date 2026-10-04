@@ -48,7 +48,7 @@ Includes the two v4 regressions, which work on master and are broken on v4.
 | 24 | v4-only | P1 high | asset_store.create_asset / ffprobe.extract_video_metadata + extract_audio_metadata | ~~moov-at-end mp4, mov and m4a uploads crash with 500 (`float('N/A')`)~~ **done on v4** (f4799193, 554e87fe) | yes |
 | 1 | v4-regression | P0 critical | workflows/to_video.py | ~~memory strategy (default) drops original audio~~ **done on v4** (2d9a5946) | yes |
 | 2 | v4-regression | P1 high | workflows/to_video.py | ~~disk strategy trim truncates audio~~ **done on v4** (2d9a5946) | yes (same diff as 1) |
-| 16 | v4-only | P1 high | apis/endpoints/stream.py | dead /stream websocket stays in store, crashes the session sweeper | no, suggestion only |
+| 16 | v4-only | P1 high | apis/endpoints/stream.py | ~~dead /stream websocket stays in store, crashes the session sweeper~~ **done on v4** (999283b8) | yes |
 | 3 | v4-only | P2 medium | ffmpeg.spawn_frames | audio-to-image trim start yields truncated video | yes |
 | 11 | v4-only | P2 medium | ffmpeg.replace_audio | audio-to-image trim: audio track not offset (lip desync) | no, suggestion only |
 | 7 | v4-only | P2 medium | workflows/core.py | as-frames mode gets empty source audio/voice | yes |
@@ -78,7 +78,7 @@ Suggested order:
 1. **[top bug, v4-only]**: ~~bugs 5 and 24 together~~ **done on v4** (f4799193, 554e87fe). Ordinary phone, camera and editor MP4/MOV/M4A files with the index at the end crash the upload API with a 500. Users report it, and it is reproduced with replicas of their files.
 2. **[v4-regression]**: ~~bugs 1 and 2. One diff; this should unblock default runs.~~ **done on v4** (2d9a5946).
 3. **[master+v4]**: bugs 4, 22, 8, 12, 6, 10, 13, 14, 20, 23 on master, then merge into v4.
-4. **[v4-only]**: bugs 16, 3, 11, 7, 15, 17, 19, 21, 18.
+4. **[v4-only]**: bugs ~~16~~ (**done on v4**, 999283b8), 3, 11, 7, 15, 17, 19, 21, 18.
 
 Bugs 12 to 24 were added later, from the 95% coverage push and the xfail work. They have not gone through the patched-copy validation yet. 12, 13, 14 and 20 were reproduced on both trees with the same result. For 15 to 18, `git cat-file` and `git grep` on `origin/master` confirm that their files, and any aom, vpx, libdatachannel or websocket code, do not exist on master.
 
@@ -634,7 +634,9 @@ These entries have not been through the patched-copy validation. The suggested d
 Repro scripts are in `regress/new/`.
 
 
-## 16. Dead /stream websocket stays in the store and crashes the session sweeper
+## ~~16. Dead /stream websocket stays in the store and crashes the session sweeper~~
+**Done on v4** (999283b8): `websocket_store.destroy` only closes websockets whose `application_state` is still `CONNECTED`; a dead entry is dropped with the session's store content without a close. Reproduced against a real uvicorn server (client sends frames, drops the TCP connection): the stale entry has `application_state = DISCONNECTED`, and destroy raised `RuntimeError: Cannot call "send" once a close message has been sent.` (asyncio since e5a1899c, no longer anyio's `RunFinishedError`), which killed the per-session watcher thread and made `DELETE /session` fail. With the fix destroy completes. `tests/test_websocket_store.py::test_destroy` covers a dead entry registered before a live one.
+
 **[v4-only] · P1 high** · `facefusion/apis/endpoints/stream.py`
 
 ### Evidence
