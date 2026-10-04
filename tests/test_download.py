@@ -17,8 +17,8 @@ def before_all() -> None:
 
 	conditional_download('.assets/models',
 	[
-		'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fairface.hash',
-		'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fairface.onnx'
+		'https://github.com/facefusion/facefusion-assets/releases/download/models-3.4.0/yunet_2023_mar.hash',
+		'https://github.com/facefusion/facefusion-assets/releases/download/models-3.4.0/yunet_2023_mar.onnx'
 	])
 	conditional_download(get_test_examples_directory(),
 	[
@@ -43,29 +43,27 @@ def create_test_source(source_path : str, hash_content : str) -> None:
 
 
 def test_conditional_download() -> None:
-	remove_file(get_test_example_file('fairface.hash'))
+	remove_file(get_test_example_file('yunet_2023_mar.hash'))
 	conditional_download(get_test_examples_directory(),
 	[
-		'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fairface.hash'
+		'https://github.com/facefusion/facefusion-assets/releases/download/models-3.4.0/yunet_2023_mar.hash'
 	])
 
-	assert get_file_size(get_test_example_file('fairface.hash')) == get_static_download_size('https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fairface.hash')
-	assert get_file_size(get_test_example_file('fairface.hash')) == 8
+	assert get_file_size(get_test_example_file('yunet_2023_mar.hash')) == get_static_download_size('https://github.com/facefusion/facefusion-assets/releases/download/models-3.4.0/yunet_2023_mar.hash')
+	assert get_file_size(get_test_example_file('yunet_2023_mar.hash')) == 8
 
-
-@pytest.mark.xfail(strict = True, raises = AssertionError, reason = 'TESTING_AND_FIXING.md #23')
-def test_conditional_download_with_missing_url() -> None:
 	conditional_download(get_test_outputs_directory(),
 	[
-		'https://github.com/facefusion/facefusion-assets/releases/download/examples-3.0.0/invalid.jpg'
+		'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/invalid.onnx'
 	])
 
-	assert is_file(get_test_output_path('invalid.jpg')) is False
+	assert is_file(get_test_output_path('invalid.onnx')) is False
 
 
 def test_get_static_download_size() -> None:
-	assert get_static_download_size('https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fairface.onnx') == 85170772
-	assert get_static_download_size('https://huggingface.co/facefusion/models-3.0.0/resolve/main/fairface.onnx') == 85170772
+	assert get_static_download_size('https://github.com/facefusion/facefusion-assets/releases/download/models-3.4.0/yunet_2023_mar.onnx') == 232475
+	assert get_static_download_size('https://huggingface.co/facefusion/models-3.4.0/resolve/main/yunet_2023_mar.onnx') == 232475
+	assert get_static_download_size('https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/invalid.onnx') == 0
 	assert get_static_download_size('invalid') == 0
 
 
@@ -78,44 +76,30 @@ def test_static_ping_url() -> None:
 def test_conditional_download_hashes() -> None:
 	hash_set : DownloadSet =\
 	{
-		'fairface':
+		'yunet':
 		{
-			'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fairface.hash',
-			'path': '.assets/models/fairface.hash'
+			'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.4.0/yunet_2023_mar.hash',
+			'path': '.assets/models/yunet_2023_mar.hash'
 		}
 	}
 
 	assert conditional_download_hashes(hash_set) is True
 	assert process_manager.is_pending() is True
 
-	remove_file(get_test_example_file('fairface.hash'))
+	remove_file(get_test_example_file('yunet_2023_mar.hash'))
 	hash_set =\
 	{
-		'fairface':
+		'yunet':
 		{
-			'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fairface.hash',
-			'path': get_test_example_file('fairface.hash')
+			'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.4.0/yunet_2023_mar.hash',
+			'path': get_test_example_file('yunet_2023_mar.hash')
 		}
 	}
 
 	assert conditional_download_hashes(hash_set) is True
-	assert is_file(get_test_example_file('fairface.hash')) is True
+	assert is_file(get_test_example_file('yunet_2023_mar.hash')) is True
 
 	hash_set =\
-	{
-		'invalid':
-		{
-			'url': 'invalid',
-			'path': 'invalid'
-		}
-	}
-
-	assert conditional_download_hashes(hash_set) is False
-
-
-@pytest.mark.xfail(strict = True, raises = AssertionError, reason = 'TESTING_AND_FIXING.md #22')
-def test_conditional_download_hashes_with_invalid_hash() -> None:
-	hash_set : DownloadSet =\
 	{
 		'invalid':
 		{
@@ -131,10 +115,10 @@ def test_conditional_download_hashes_with_invalid_hash() -> None:
 def test_conditional_download_sources() -> None:
 	source_set : DownloadSet =\
 	{
-		'fairface':
+		'yunet':
 		{
-			'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fairface.onnx',
-			'path': '.assets/models/fairface.onnx'
+			'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.4.0/yunet_2023_mar.onnx',
+			'path': '.assets/models/yunet_2023_mar.onnx'
 		}
 	}
 
@@ -165,54 +149,39 @@ def test_conditional_download_sources() -> None:
 	}
 
 	assert conditional_download_sources(source_set) is False
+	assert process_manager.is_pending() is True
 	assert is_file(get_test_output_path('test-conditional-download-sources.onnx')) is False
 
 
-@pytest.mark.xfail(strict = True, raises = AssertionError, reason = 'TESTING_AND_FIXING.md #22')
-def test_conditional_download_sources_with_invalid_source() -> None:
-	create_test_source(get_test_output_path('test-conditional-download-sources-with-invalid-source.onnx'), 'invalid')
-	source_set : DownloadSet =\
-	{
-		'invalid':
-		{
-			'url': 'invalid',
-			'path': get_test_output_path('test-conditional-download-sources-with-invalid-source.onnx')
-		}
-	}
-
-	assert conditional_download_sources(source_set) is False
-	assert process_manager.is_pending() is True
-
-
 def test_validate_hash_paths() -> None:
-	assert validate_hash_paths([ '.assets/models/fairface.hash', 'invalid' ]) == ([ '.assets/models/fairface.hash' ], [ 'invalid' ])
+	assert validate_hash_paths([ '.assets/models/yunet_2023_mar.hash', 'invalid' ]) == ([ '.assets/models/yunet_2023_mar.hash' ], [ 'invalid' ])
 
 
 def test_validate_source_paths() -> None:
 	create_test_source(get_test_output_path('test-validate-source-paths-valid.onnx'), create_hash(bytes([ 1, 2, 3 ])))
 	create_test_source(get_test_output_path('test-validate-source-paths-invalid.onnx'), 'invalid')
 
-	assert validate_source_paths([ '.assets/models/fairface.onnx', get_test_output_path('test-validate-source-paths-valid.onnx') ]) == ([ '.assets/models/fairface.onnx', get_test_output_path('test-validate-source-paths-valid.onnx') ], [])
+	assert validate_source_paths([ '.assets/models/yunet_2023_mar.onnx', get_test_output_path('test-validate-source-paths-valid.onnx') ]) == ([ '.assets/models/yunet_2023_mar.onnx', get_test_output_path('test-validate-source-paths-valid.onnx') ], [])
 	assert validate_source_paths([ get_test_output_path('test-validate-source-paths-invalid.onnx'), 'invalid' ]) == ([], [ get_test_output_path('test-validate-source-paths-invalid.onnx'), 'invalid' ])
 
 
 def test_resolve_download_url() -> None:
 	state_manager.set_item('download_providers', [ 'github' ])
 
-	assert resolve_download_url('models-3.0.0', 'fairface.onnx') == 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fairface.onnx'
+	assert resolve_download_url('models-3.4.0', 'yunet_2023_mar.onnx') == 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.4.0/yunet_2023_mar.onnx'
 
 	state_manager.set_item('download_providers', [ 'huggingface', 'github' ])
 
-	assert resolve_download_url('models-3.0.0', 'fairface.onnx') == 'https://huggingface.co/facefusion/models-3.0.0/resolve/main/fairface.onnx'
+	assert resolve_download_url('models-3.4.0', 'yunet_2023_mar.onnx') == 'https://huggingface.co/facefusion/models-3.4.0/resolve/main/yunet_2023_mar.onnx'
 
 	state_manager.set_item('download_providers', [])
 
-	assert resolve_download_url('models-3.0.0', 'fairface.onnx') is None
+	assert resolve_download_url('models-3.4.0', 'yunet_2023_mar.onnx') is None
 
 
 def test_resolve_download_url_by_provider() -> None:
-	assert resolve_download_url_by_provider('github', 'models-3.0.0', 'fairface.onnx') == 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/fairface.onnx'
-	assert resolve_download_url_by_provider('huggingface', 'models-3.0.0', 'fairface.onnx') == 'https://huggingface.co/facefusion/models-3.0.0/resolve/main/fairface.onnx'
+	assert resolve_download_url_by_provider('github', 'models-3.4.0', 'yunet_2023_mar.onnx') == 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.4.0/yunet_2023_mar.onnx'
+	assert resolve_download_url_by_provider('huggingface', 'models-3.4.0', 'yunet_2023_mar.onnx') == 'https://huggingface.co/facefusion/models-3.4.0/resolve/main/yunet_2023_mar.onnx'
 
 	with patch('facefusion.download.ping_static_url', return_value = False):
-		assert resolve_download_url_by_provider('github', 'models-3.0.0', 'fairface.onnx') is None
+		assert resolve_download_url_by_provider('github', 'models-3.4.0', 'yunet_2023_mar.onnx') is None

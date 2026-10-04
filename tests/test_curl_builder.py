@@ -7,7 +7,7 @@ from facefusion.curl_builder import chain, download, ping, run, set_retry, set_t
 def test_run() -> None:
 	user_agent = metadata.get('name') + '/' + metadata.get('version')
 
-	assert run([]) == [ which('curl'), '--user-agent', user_agent, '--location', '--silent', '--ssl-no-revoke' ]
+	assert run([]) == [ which('curl'), '--user-agent', user_agent, '--location', '--silent', '--fail', '--ssl-no-revoke' ]
 
 
 def test_chain() -> None:
