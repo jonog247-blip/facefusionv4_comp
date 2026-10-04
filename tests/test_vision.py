@@ -7,7 +7,7 @@ import pytest
 from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager, video_manager
 from facefusion.common_helper import get_first
 from facefusion.download import conditional_download
-from facefusion.vision import blend_frame, blend_vision_frames, calculate_histogram_difference, conditional_match_frame_color, conditional_merge_vision_mask, count_video_frame_total, create_empty_vision_frame, create_tile_frames, detect_frame_orientation, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, extract_vision_mask, fit_contain_frame, fit_cover_frame, from_buffer, is_vision_frame, is_vision_frames, match_frame_color, merge_tile_frames, merge_vision_mask, normalize_resolution, obscure_frame, pack_resolution, predict_video_frame_total, read_image, read_video_frame, resolve_extract_frame_index, resolve_target_frame_index, restrict_frame, restrict_image_resolution, restrict_trim_video_frame, restrict_video_fps, restrict_video_resolution, scale_resolution, select_video_frames, to_buffer, to_strip_buffer, unpack_resolution, write_image
+from facefusion.vision import blend_frame, blend_vision_frames, calculate_histogram_difference, conditional_match_frame_color, conditional_merge_vision_mask, count_video_frame_total, create_empty_vision_frame, create_tile_frames, detect_frame_orientation, detect_image_resolution, detect_video_duration, detect_video_fps, detect_video_resolution, extract_vision_mask, fit_contain_frame, fit_cover_frame, from_buffer, is_vision_frame, is_vision_frames, match_frame_color, merge_tile_frames, merge_vision_mask, normalize_resolution, obscure_frame, pack_resolution, predict_video_frame_total, read_image, read_video_frame, resolve_extract_frame_index, resolve_target_frame_index, restrict_frame, restrict_image_resolution, restrict_video_fps, restrict_video_range, restrict_video_resolution, scale_resolution, select_video_frames, to_buffer, to_strip_buffer, unpack_resolution, write_image
 from .assert_helper import get_test_example_file, get_test_examples_directory, get_test_output_path, prepare_test_output_directory
 
 
@@ -208,14 +208,14 @@ def test_detect_video_duration() -> None:
 	assert detect_video_duration('invalid') == 0
 
 
-def test_restrict_trim_frame() -> None:
-	assert restrict_trim_video_frame(get_test_example_file('target-240p.mp4'), 0, 200) == (0, 200)
-	assert restrict_trim_video_frame(get_test_example_file('target-240p.mp4'), 70, 270) == (70, 270)
-	assert restrict_trim_video_frame(get_test_example_file('target-240p.mp4'), -10, None) == (0, 270)
-	assert restrict_trim_video_frame(get_test_example_file('target-240p.mp4'), None, -10) == (0, 0)
-	assert restrict_trim_video_frame(get_test_example_file('target-240p.mp4'), 280, None) == (270, 270)
-	assert restrict_trim_video_frame(get_test_example_file('target-240p.mp4'), None, 280) == (0, 270)
-	assert restrict_trim_video_frame(get_test_example_file('target-240p.mp4'), None, None) == (0, 270)
+def test_restrict_video_range() -> None:
+	assert restrict_video_range(get_test_example_file('target-240p.mp4'), 0, 200) == (0, 200)
+	assert restrict_video_range(get_test_example_file('target-240p.mp4'), 70, 270) == (70, 270)
+	assert restrict_video_range(get_test_example_file('target-240p.mp4'), -10, None) == (0, 270)
+	assert restrict_video_range(get_test_example_file('target-240p.mp4'), None, -10) == (0, 0)
+	assert restrict_video_range(get_test_example_file('target-240p.mp4'), 280, None) == (270, 270)
+	assert restrict_video_range(get_test_example_file('target-240p.mp4'), None, 280) == (0, 270)
+	assert restrict_video_range(get_test_example_file('target-240p.mp4'), None, None) == (0, 270)
 
 
 def test_detect_video_resolution() -> None:
