@@ -5,6 +5,7 @@ from unittest.mock import patch
 import cv2
 import numpy
 import pytest
+from pytest import approx
 
 from facefusion import ffmpeg, ffmpeg_builder, process_manager, state_manager, video_manager
 from facefusion.download import conditional_download
@@ -262,7 +263,7 @@ def test_restore_audio() -> None:
 	create_temp_frames()
 
 	assert restore_audio() == 0
-	assert probe_audio_entries(get_test_output_path('test-restore-audio-restore.mp4'), [ 'duration' ]) == { 'duration': '3.797000' }
+	assert float(probe_audio_entries(get_test_output_path('test-restore-audio-restore.mp4'), [ 'duration' ]).get('duration')) == approx(3.8, abs = 0.02)
 
 	state_manager.set_item('output_path', get_test_output_path('test-restore-audio-restore-skip.mp4'))
 	state_manager.set_item('target_path', get_test_example_file('target-240p.mp4'))

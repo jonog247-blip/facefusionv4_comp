@@ -90,8 +90,9 @@ def test_resolve_cudnn_conv_algo_search() -> None:
 		}
 	]
 
-	with patch('facefusion.execution.detect_graphic_devices', return_value = graphic_devices):
-		assert resolve_cudnn_conv_algo_search([ 'cuda' ]) == 'DEFAULT'
+	with patch('facefusion.execution.has_execution_provider', return_value = True):
+		with patch('facefusion.execution.detect_graphic_devices', return_value = graphic_devices):
+			assert resolve_cudnn_conv_algo_search([ 'cuda' ]) == 'DEFAULT'
 
 	assert resolve_cudnn_conv_algo_search([ 'cpu' ]) == 'EXHAUSTIVE'
 

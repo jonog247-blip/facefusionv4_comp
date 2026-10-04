@@ -3,7 +3,7 @@ from time import time
 
 import pytest
 
-from facefusion import ffmpeg, ffmpeg_builder, inference_manager, process_manager, state_manager, video_manager
+from facefusion import ffmpeg, ffmpeg_builder, inference_manager, process_manager, state_manager, video_manager, voice_extractor
 from facefusion.download import conditional_download
 from facefusion.filesystem import is_directory, resolve_file_paths
 from facefusion.workflows.audio_to_image_as_frames import process
@@ -61,6 +61,8 @@ def before_all() -> None:
 	state_manager.init_item('voice_extractor_model', 'kim_vocal_2')
 	state_manager.init_item('output_image_scale', 1.0)
 	state_manager.init_item('processors', [])
+
+	voice_extractor.pre_check()
 
 
 @pytest.fixture(scope = 'function', autouse = True)

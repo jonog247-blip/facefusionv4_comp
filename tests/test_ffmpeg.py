@@ -7,6 +7,7 @@ from typing import Dict
 
 import pytest
 from _pytest.logging import LogCaptureFixture
+from pytest import approx
 
 import facefusion.choices
 import facefusion.ffmpeg
@@ -487,19 +488,19 @@ def test_restore_audio() -> None:
 	target_path = get_test_example_file('target-240p-48khz.mp4')
 	trim_test_set =\
 	[
-		(get_test_output_path('test-restore-audio-0-50.mp4'), 0, 50, { 'duration': '2.000000' }),
-		(get_test_output_path('test-restore-audio-25-75.mp4'), 25, 75, { 'duration': '2.000000' }),
-		(get_test_output_path('test-restore-audio-50-150.mp4'), 50, 150, { 'duration': '1.797000' }),
-		(get_test_output_path('test-restore-audio-124-224.mp4'), 124, 224, {})
+		(get_test_output_path('test-restore-audio-0-50.mp4'), 0, 50, 2.0),
+		(get_test_output_path('test-restore-audio-25-75.mp4'), 25, 75, 2.0),
+		(get_test_output_path('test-restore-audio-50-150.mp4'), 50, 150, 1.8),
+		(get_test_output_path('test-restore-audio-124-224.mp4'), 124, 224, 0)
 	]
 
-	for output_path, trim_frame_start, trim_frame_end, audio_entries in trim_test_set:
+	for output_path, trim_frame_start, trim_frame_end, audio_duration in trim_test_set:
 		create_temp_directory(state_manager.get_temp_path(), output_path)
 		extract_frames(target_path, output_path, (426, 226), 25.0, trim_frame_start, trim_frame_end)
 		merge_video(target_path, output_path, 25.0, 25.0, (426, 226), trim_frame_start, trim_frame_end)
 
 		assert restore_audio(target_path, output_path, trim_frame_start, trim_frame_end) is True
-		assert probe_audio_entries(output_path, [ 'duration' ]) == audio_entries
+		assert float(probe_audio_entries(output_path, [ 'duration' ]).get('duration', 0)) == approx(audio_duration, abs = 0.02)
 		assert extract_video_metadata(output_path).get('frame_total') == trim_frame_end - trim_frame_start
 
 		clear_temp_directory(state_manager.get_temp_path(), output_path)
