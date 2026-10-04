@@ -31,7 +31,7 @@ def before_all() -> None:
 			],
 			ffmpeg_builder.set_output(get_test_example_file('target-240p.jpg'))
 		)
-	)
+	).wait()
 
 	state_manager.init_item('temp_path', tempfile.gettempdir())
 	state_manager.init_item('source_paths', [ get_test_example_file('source.jpg') ])

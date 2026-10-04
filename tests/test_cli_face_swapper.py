@@ -40,7 +40,7 @@ def before_all() -> None:
 			],
 			ffmpeg_builder.set_output(get_test_example_file('target-240p.jpg'))
 		)
-	)
+	).wait()
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('source.jpg')),
@@ -50,7 +50,7 @@ def before_all() -> None:
 			],
 			ffmpeg_builder.set_output(get_test_example_file('source-10x10.jpg'))
 		)
-	)
+	).wait()
 
 
 @pytest.fixture(scope = 'function', autouse = True)

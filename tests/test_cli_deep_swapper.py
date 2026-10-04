@@ -37,7 +37,7 @@ def before_all() -> None:
 			],
 			ffmpeg_builder.set_output(get_test_example_file('target-240p.jpg'))
 		)
-	)
+	).wait()
 
 	commands = [ sys.executable, 'facefusion.py', 'run', '--workflow-mode', 'image-to-image', '--jobs-path', get_test_jobs_directory(), '--processors', 'deep_swapper', '--face-mask-types', 'box', '-t', get_test_example_file('target-240p.jpg'), '-o', get_test_example_file('target-240p-deep-swapper.png') ]
 	subprocess.run(commands)

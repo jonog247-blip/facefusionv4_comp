@@ -35,7 +35,7 @@ def before_all() -> None:
 			],
 			ffmpeg_builder.set_output(get_test_example_file('target-240p.jpg'))
 		)
-	)
+	).wait()
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			[
@@ -63,7 +63,7 @@ def before_all() -> None:
 			ffmpeg_builder.set_audio_encoder('aac'),
 			ffmpeg_builder.set_output(get_test_example_file('target-240p-moov-end.mp4'))
 		)
-	)
+	).wait()
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			[
@@ -92,7 +92,7 @@ def before_all() -> None:
 			ffmpeg_builder.set_faststart('mp4'),
 			ffmpeg_builder.set_output(get_test_example_file('target-240p-faststart.mp4'))
 		)
-	)
+	).wait()
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('target-240p-moov-end.mp4')),
@@ -100,7 +100,7 @@ def before_all() -> None:
 			ffmpeg_builder.copy_audio_encoder(),
 			ffmpeg_builder.set_output(get_test_example_file('target-240p-moov-end.mov'))
 		)
-	)
+	).wait()
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			[
@@ -111,7 +111,7 @@ def before_all() -> None:
 			ffmpeg_builder.set_audio_encoder('aac'),
 			ffmpeg_builder.set_output(get_test_example_file('source-moov-end.m4a'))
 		)
-	)
+	).wait()
 
 	state_manager.init_item('execution_device_ids', [ 0 ])
 	state_manager.init_item('execution_providers', [ 'cpu' ])

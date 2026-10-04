@@ -36,7 +36,7 @@ def before_all() -> None:
 				],
 				ffmpeg_builder.set_output(get_test_example_file(target_name + '.jpg'))
 			)
-		)
+		).wait()
 
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
@@ -47,7 +47,7 @@ def before_all() -> None:
 			],
 			ffmpeg_builder.set_output(get_test_example_file('目标-240p.webp'))
 		)
-	)
+	).wait()
 
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
@@ -62,7 +62,7 @@ def before_all() -> None:
 			],
 			ffmpeg_builder.set_output(get_test_example_file('target-240p-0sat.jpg'))
 		)
-	)
+	).wait()
 
 	for target_name in [ 'target-240p', 'target-1080p' ]:
 		ffmpeg.run_ffmpeg(
@@ -78,7 +78,7 @@ def before_all() -> None:
 				],
 				ffmpeg_builder.set_output(get_test_example_file(target_name + '-90deg.jpg'))
 			)
-		)
+		).wait()
 
 	for video_fps in [ 25, 30, 60 ]:
 		ffmpeg.run_ffmpeg(
@@ -87,7 +87,7 @@ def before_all() -> None:
 				ffmpeg_builder.set_video_fps(video_fps),
 				ffmpeg_builder.set_output(get_test_example_file('target-240p-' + str(video_fps) + 'fps.mp4'))
 			)
-		)
+		).wait()
 
 	for target_name in [ 'target-240p', 'target-1080p' ]:
 		ffmpeg.run_ffmpeg(
@@ -99,7 +99,7 @@ def before_all() -> None:
 				],
 				ffmpeg_builder.set_output(get_test_example_file(target_name + '-90deg.mp4'))
 			)
-		)
+		).wait()
 
 
 @pytest.fixture(scope = 'function', autouse = True)

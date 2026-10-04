@@ -4,7 +4,6 @@ import subprocess
 import tempfile
 from types import SimpleNamespace
 from typing import Dict
-from unittest.mock import Mock
 
 import pytest
 from _pytest.logging import LogCaptureFixture
@@ -13,7 +12,7 @@ import facefusion.choices
 import facefusion.ffmpeg
 from facefusion import cli_progress, ffmpeg, ffmpeg_builder, ffprobe, ffprobe_builder, process_manager, state_manager
 from facefusion.download import conditional_download
-from facefusion.ffmpeg import concat_video, copy_image, extract_frames, finalize_image, fix_audio_encoder, fix_video_encoder, log_debug, merge_video, read_audio_buffer, replace_audio, restore_audio, run_ffmpeg, run_ffmpeg_with_progress, sanitize_audio, sanitize_image, sanitize_video, spawn_frames
+from facefusion.ffmpeg import await_process, concat_video, copy_image, extract_frames, finalize_image, fix_audio_encoder, fix_video_encoder, log_debug, merge_video, read_audio_buffer, render_progress, replace_audio, restore_audio, run_ffmpeg, sanitize_audio, sanitize_image, sanitize_video, spawn_frames
 from facefusion.ffprobe import extract_video_metadata, probe_audio_entries, probe_video_entries
 from facefusion.filesystem import copy_file, get_file_size, is_image
 from facefusion.temp_helper import clear_temp_directory, create_temp_directory, get_temp_file_path, resolve_temp_frame_paths, resolve_temp_frame_set
@@ -49,7 +48,7 @@ def before_all() -> None:
 			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
 			ffmpeg_builder.set_output(get_test_example_file('source.wav'))
 		)
-	)
+	).wait()
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
@@ -59,7 +58,7 @@ def before_all() -> None:
 			],
 			ffmpeg_builder.set_output(get_test_example_file('target-240p.jpg'))
 		)
-	)
+	).wait()
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('source.wav')),
@@ -69,7 +68,7 @@ def before_all() -> None:
 			],
 			ffmpeg_builder.set_output(get_test_example_file('source-metadata.wav'))
 		)
-	)
+	).wait()
 
 	for video_fps in [ 25, 30, 60 ]:
 		ffmpeg.run_ffmpeg(
@@ -78,7 +77,7 @@ def before_all() -> None:
 				ffmpeg_builder.set_video_fps(video_fps),
 				ffmpeg_builder.set_output(get_test_example_file('target-240p-' + str(video_fps) + 'fps.mp4'))
 			)
-		)
+		).wait()
 
 	for output_video_format in [ 'avi', 'm4v', 'mkv', 'mov', 'mp4', 'webm', 'wmv' ]:
 		ffmpeg.run_ffmpeg(
@@ -88,7 +87,7 @@ def before_all() -> None:
 				ffmpeg_builder.set_audio_sample_rate(16000),
 				ffmpeg_builder.set_output(get_test_example_file('target-240p-16khz.' + output_video_format))
 			)
-		)
+		).wait()
 
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
@@ -97,7 +96,7 @@ def before_all() -> None:
 			ffmpeg_builder.set_audio_sample_rate(48000),
 			ffmpeg_builder.set_output(get_test_example_file('target-240p-48khz.mp4'))
 		)
-	)
+	).wait()
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
@@ -108,14 +107,14 @@ def before_all() -> None:
 			ffmpeg_builder.set_faststart('mp4'),
 			ffmpeg_builder.set_output(get_test_example_file('target-240p-h265.mp4'))
 		)
-	)
+	).wait()
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
 			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
 			ffmpeg_builder.set_output(get_test_example_file('target-240p-moov-end.mp4'))
 		)
-	)
+	).wait()
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
@@ -123,14 +122,14 @@ def before_all() -> None:
 			ffmpeg_builder.set_faststart('mp4'),
 			ffmpeg_builder.set_output(get_test_example_file('source.m4a'))
 		)
-	)
+	).wait()
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('source.mp3')),
 			ffmpeg_builder.set_audio_encoder('alac'),
 			ffmpeg_builder.set_output(get_test_example_file('source-moov-end.m4a'))
 		)
-	)
+	).wait()
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('target-240p-h265.mp4')),
@@ -142,7 +141,7 @@ def before_all() -> None:
 			ffmpeg_builder.set_faststart('mp4'),
 			ffmpeg_builder.set_output(get_test_example_file('target-240p-h265-metadata.mp4'))
 		)
-	)
+	).wait()
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
 			ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
@@ -150,7 +149,7 @@ def before_all() -> None:
 			ffmpeg_builder.set_faststart('mp4'),
 			ffmpeg_builder.set_output(get_test_example_file('target-240p.m4a'))
 		)
-	)
+	).wait()
 
 
 @pytest.fixture(scope = 'function', autouse = True)
@@ -186,57 +185,77 @@ def stop_processing(frame_index : int) -> None:
 	process_manager.stop()
 
 
-def test_run_ffmpeg_with_progress() -> None:
-	state_manager.set_item('log_level', 'debug')
+def test_run_ffmpeg() -> None:
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+		ffmpeg_builder.force_output(get_test_output_path('test-run-ffmpeg.mp4'))
+	)
 
-	with cli_progress.create() as progress:
-		process = run_ffmpeg_with_progress(ffmpeg_builder.chain(ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')), [ '-vframes', '10', '-f', 'null', '-' ]), progress)
+	assert run_ffmpeg(commands).wait() == 0
 
-		assert process.returncode == 0
-		assert progress.current == 10
 
-	state_manager.clear_item('log_level')
-	progress = SimpleNamespace(seek = Mock(side_effect = stop_processing))
-	process = run_ffmpeg_with_progress([ '-re', '-f', 'lavfi', '-i', 'testsrc=duration=100:size=320x240:rate=25', '-f', 'null', '-' ], progress)
-	is_stopping = process_manager.is_stopping()
+def test_render_progress() -> None:
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+		ffmpeg_builder.force_output(get_test_output_path('test-render-progress.mp4')),
+		ffmpeg_builder.set_progress(),
+		ffmpeg_builder.cast_stream()
+	)
+	process = run_ffmpeg(commands)
+
+	with cli_progress.create(total = 270) as progress:
+		render_progress(process, progress)
+
+		assert progress.current == 270
+
+	assert process.wait() == 0
+
+	process = run_ffmpeg(commands)
+	render_progress(process, SimpleNamespace(seek = stop_processing))
+
+	assert process_manager.is_stopping() is True
+
+	process.wait()
 	process_manager.start()
 
-	assert progress.seek.call_args.args[0] < 2500
-	assert is_stopping is True
+
+def test_await_process(caplog : LogCaptureFixture) -> None:
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+		ffmpeg_builder.force_output(get_test_output_path('test-await-process.mp4'))
+	)
+
+	assert await_process(run_ffmpeg(commands)).returncode == 0
+
+	commands = ffmpeg_builder.chain(
+		ffmpeg_builder.set_input(get_test_example_file('target-240p.mp4')),
+		ffmpeg_builder.set_video_encoder('libx265'),
+		ffmpeg_builder.set_video_preset('libx265', 'slow'),
+		ffmpeg_builder.force_output(get_test_output_path('test-await-process.mp4'))
+	)
+
+	assert await_process(run_ffmpeg(commands)).returncode == 0
 
 	process_manager.end()
-	process = run_ffmpeg_with_progress([ '-re', '-f', 'lavfi', '-i', 'testsrc=duration=100:size=320x240:rate=25', '-f', 'null', '-' ], progress)
-	process_manager.start()
+	process = await_process(run_ffmpeg(commands))
 
 	assert process.returncode is None
 
-	process.kill()
 	process.wait()
-
-
-def test_run_ffmpeg(caplog : LogCaptureFixture) -> None:
+	process_manager.start()
 	caplog.set_level(logging.DEBUG, logger = 'facefusion')
 	state_manager.set_item('log_level', 'debug')
-	process = run_ffmpeg([ '-i', 'invalid' ])
+	process = await_process(run_ffmpeg(ffmpeg_builder.set_input('invalid')))
 	state_manager.clear_item('log_level')
 
 	assert process.returncode > 0
 	assert caplog.messages[-1] == '[FACEFUSION.FFMPEG] Error opening input files: No such file or directory'
 
 	process_manager.stop()
-	process = run_ffmpeg([ '-re', '-f', 'lavfi', '-i', 'testsrc=duration=100:size=320x240:rate=25', '-f', 'null', '-' ])
+
+	assert not await_process(run_ffmpeg(commands)).wait() == 0
+
 	process_manager.start()
-
-	assert process.wait() in [ 255, -15 ]
-
-
-@pytest.mark.xfail(strict = True, raises = AssertionError, reason = 'TESTING_AND_FIXING.md #8')
-def test_run_ffmpeg_without_processing() -> None:
-	process_manager.end()
-	process = run_ffmpeg([ '-f', 'lavfi', '-i', 'testsrc=duration=1:size=320x240:rate=25', '-f', 'null', '-' ])
-	process_manager.start()
-
-	assert process.returncode == 0
 
 
 def test_log_debug(caplog : LogCaptureFixture) -> None:

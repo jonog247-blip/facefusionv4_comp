@@ -36,7 +36,7 @@ def before_all() -> None:
 			],
 			ffmpeg_builder.set_output(get_test_example_file('target-240p.jpg'))
 		)
-	)
+	).wait()
 
 	for target_angle, target_filter in [ ('90', 'transpose=0'), ('180', 'hflip,vflip'), ('270', 'transpose=3') ]:
 		ffmpeg.run_ffmpeg(
@@ -52,7 +52,7 @@ def before_all() -> None:
 				],
 				ffmpeg_builder.set_output(get_test_example_file('target-240p-' + target_angle + 'deg.jpg'))
 			)
-		)
+		).wait()
 
 	ffmpeg.run_ffmpeg(
 		ffmpeg_builder.chain(
@@ -67,7 +67,7 @@ def before_all() -> None:
 			],
 			ffmpeg_builder.set_output(get_test_example_file('target-240p-gap.mp4'))
 		)
-	)
+	).wait()
 
 
 @pytest.fixture(scope = 'function', autouse = True)
