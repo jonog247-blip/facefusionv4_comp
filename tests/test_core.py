@@ -61,7 +61,7 @@ def test_cli() -> None:
 def test_route() -> None:
 	state_manager.set_item('command', 'force-download')
 
-	with patch('facefusion.core.conditional_download_hashes', return_value = False):
+	with patch('facefusion.core.conditional_download_files', return_value = False):
 		with pytest.raises(SystemExit) as system_exit:
 			route({})
 
@@ -142,20 +142,18 @@ def test_processors_pre_check() -> None:
 def test_force_download() -> None:
 	state_manager.set_item('command', 'force-download')
 
-	with patch('facefusion.core.conditional_download_hashes', return_value = True):
-		with patch('facefusion.core.conditional_download_sources', return_value = True) as download_mock:
-			with pytest.raises(SystemExit) as system_exit:
-				route({})
+	with patch('facefusion.core.conditional_download_files', return_value = True) as download_mock:
+		with pytest.raises(SystemExit) as system_exit:
+			route({})
 
-	assert download_mock.call_count > 1
+	assert download_mock.call_count > 2
 	assert system_exit.value.code == 0
 
-	with patch('facefusion.core.conditional_download_hashes', return_value = True):
-		with patch('facefusion.core.conditional_download_sources', return_value = False) as download_mock:
-			with pytest.raises(SystemExit) as system_exit:
-				route({})
+	with patch('facefusion.core.conditional_download_files', side_effect = [ True, False ]) as download_mock:
+		with pytest.raises(SystemExit) as system_exit:
+			route({})
 
-	assert download_mock.call_count == 1
+	assert download_mock.call_count == 2
 	assert system_exit.value.code == 1
 
 

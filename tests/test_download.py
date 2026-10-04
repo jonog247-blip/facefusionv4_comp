@@ -64,6 +64,7 @@ def test_get_static_download_size() -> None:
 	assert get_static_download_size('https://github.com/facefusion/facefusion-assets/releases/download/models-3.4.0/yunet_2023_mar.onnx') == 232475
 	assert get_static_download_size('https://huggingface.co/facefusion/models-3.4.0/resolve/main/yunet_2023_mar.onnx') == 232475
 	assert get_static_download_size('https://github.com/facefusion/facefusion-assets/releases/download/models-3.0.0/invalid.onnx') == 0
+	assert get_static_download_size('https://github.com') == 0
 	assert get_static_download_size('invalid') == 0
 
 
@@ -195,6 +196,11 @@ def test_resolve_download_url() -> None:
 	state_manager.set_item('download_providers', [ 'huggingface', 'github' ])
 
 	assert resolve_download_url('models-3.4.0', 'yunet_2023_mar.onnx') == 'https://huggingface.co/facefusion/models-3.4.0/resolve/main/yunet_2023_mar.onnx'
+
+	state_manager.set_item('download_providers', [ 'github', 'huggingface' ])
+
+	with patch('facefusion.download.ping_static_url', side_effect = [ False, True ]):
+		assert resolve_download_url('models-3.4.0', 'yunet_2023_mar.onnx') == 'https://huggingface.co/facefusion/models-3.4.0/resolve/main/yunet_2023_mar.onnx'
 
 	state_manager.set_item('download_providers', [])
 

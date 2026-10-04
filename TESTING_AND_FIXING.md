@@ -44,11 +44,11 @@ Includes the two v4 regressions, which work on master and are broken on v4.
 
 | # | Scope | Priority | Module | Bug | Fix validated |
 |---|-------|----------|--------|-----|---------------|
-| 5 | v4-only | P1 high | ffmpeg.py + apis/asset_helper.py | ~~sanitize_video fails on moov-at-end MP4/MOV; real-world uploads crash with 500 (see 24)~~ **done on v4** (f4799193, 554e87fe) | yes |
-| 24 | v4-only | P1 high | asset_store.create_asset / ffprobe.extract_video_metadata + extract_audio_metadata | ~~moov-at-end mp4, mov and m4a uploads crash with 500 (`float('N/A')`)~~ **done on v4** (f4799193, 554e87fe) | yes |
-| 1 | v4-regression | P0 critical | workflows/to_video.py | ~~memory strategy (default) drops original audio~~ **done on v4** (2d9a5946) | yes |
-| 2 | v4-regression | P1 high | workflows/to_video.py | ~~disk strategy trim truncates audio~~ **done on v4** (2d9a5946) | yes (same diff as 1) |
-| 16 | v4-only | P1 high | apis/endpoints/stream.py | ~~dead /stream websocket stays in store, crashes the session sweeper~~ **done on v4** (999283b8) | yes |
+| ~~5~~ | ~~v4-only~~ | ~~P1 high~~ | ~~ffmpeg.py + apis/asset_helper.py~~ | ~~sanitize_video fails on moov-at-end MP4/MOV; real-world uploads crash with 500 (see 24)~~ **done on v4** (f4799193, 554e87fe) | ~~yes~~ |
+| ~~24~~ | ~~v4-only~~ | ~~P1 high~~ | ~~asset_store.create_asset / ffprobe.extract_video_metadata + extract_audio_metadata~~ | ~~moov-at-end mp4, mov and m4a uploads crash with 500 (`float('N/A')`)~~ **done on v4** (f4799193, 554e87fe) | ~~yes~~ |
+| ~~1~~ | ~~v4-regression~~ | ~~P0 critical~~ | ~~workflows/to_video.py~~ | ~~memory strategy (default) drops original audio~~ **done on v4** (2d9a5946) | ~~yes~~ |
+| ~~2~~ | ~~v4-regression~~ | ~~P1 high~~ | ~~workflows/to_video.py~~ | ~~disk strategy trim truncates audio~~ **done on v4** (2d9a5946) | ~~yes (same diff as 1)~~ |
+| ~~16~~ | ~~v4-only~~ | ~~P1 high~~ | ~~apis/endpoints/stream.py~~ | ~~dead /stream websocket stays in store, crashes the session sweeper~~ **done on v4** (999283b8) | ~~yes~~ |
 | 3 | v4-only | P2 medium | ffmpeg.spawn_frames | audio-to-image trim start yields truncated video | yes |
 | 11 | v4-only | P2 medium | ffmpeg.replace_audio | audio-to-image trim: audio track not offset (lip desync) | no, suggestion only |
 | 7 | v4-only | P2 medium | workflows/core.py | as-frames mode gets empty source audio/voice | yes |
@@ -62,8 +62,9 @@ Includes the two v4 regressions, which work on master and are broken on v4.
 
 | # | Scope | Priority | Module | Bug | Fix validated |
 |---|-------|----------|--------|-----|---------------|
+| ~~22~~ | ~~master+v4~~ | ~~P2 medium~~ | ~~download.conditional_download_hashes / _sources~~ | ~~failed download leaves the process in checking, later calls wait forever~~ **done on patch-3.9.2** (e34d4f47), **done on v4** (14b8534d) | ~~yes~~ |
+| ~~23~~ | ~~master+v4~~ | ~~P3 low~~ | ~~curl_builder.run / download.conditional_download~~ | ~~HTTP error body (e.g. 404 "Not Found") is saved as the downloaded file~~ **done on patch-3.9.2** (e34d4f47), **done on v4** (14b8534d) | ~~yes~~ |
 | 4 | master+v4 | P1 high | ffmpeg.py (ffprobe cache) | stale cached temp video metadata across jobs | yes |
-| 22 | master+v4 | P2 medium | download.conditional_download_hashes / _sources | ~~failed download leaves the process in checking, later calls wait forever~~ **done on patch-3.9.2** (e34d4f47), **done on v4** (14b8534d) | yes |
 | 8 | master+v4 | P2 medium | ffmpeg.run_ffmpeg | returncode None outside processing state | yes |
 | 12 | master+v4 | P2 medium | ffmpeg.log_debug | `--log-level debug` closes ffmpeg stdout, encoder detection crashes | no, suggestion only |
 | 6 | master+v4 | P3 low | filesystem.move_file | missing output dir raises FileNotFoundError | yes |
@@ -71,7 +72,6 @@ Includes the two v4 regressions, which work on master and are broken on v4.
 | 13 | master+v4 | P3 low | jobs/job_manager.init_jobs | jobs path that is a file raises NotADirectoryError | no, suggestion only |
 | 14 | master+v4 | P3 low | ffmpeg.run_ffmpeg_with_progress | already stopped run leaves ffmpeg running | no, suggestion only |
 | 20 | master+v4 | P3 low | core.conditional_process | mismatched --workflow-mode exits 1 without an error message | no, suggestion only |
-| 23 | master+v4 | P3 low | curl_builder.run / download.conditional_download | ~~HTTP error body (e.g. 404 "Not Found") is saved as the downloaded file~~ **done on patch-3.9.2** (e34d4f47), **done on v4** (14b8534d) | yes |
 | 9 | master+v4 | won't fix | workflows/core.py | voice_extractor runs without a processor needing it | by design |
 
 Suggested order:
@@ -104,18 +104,18 @@ Every bug with a deterministic reproduction has a test in the suite marked `@pyt
 |---|------|--------------|
 | ~~1~~ | ~~tests/test_image_to_video.py::test_process_memory_with_audio~~ done on v4, marker removed | AssertionError |
 | ~~2~~ | ~~tests/test_image_to_video.py::test_process_disk_with_trim_frame~~ done on v4, marker removed | AssertionError |
-| 3 | tests/test_ffmpeg.py::test_spawn_frames_with_trim_frame_start | AssertionError |
-| 4 | tests/test_ffmpeg.py::test_restore_audio_with_reused_output_path | AssertionError |
 | ~~5~~ | ~~tests/test_ffmpeg.py::test_sanitize_video_with_moov_at_end~~ done on v4, replaced by test_sanitize_video_with_strict / _with_moderate | AssertionError |
 | ~~5, 24~~ | ~~tests/test_api_assets.py::test_upload_assets_with_moov_at_end~~ done on v4, test_upload_assets_with_moov_at_end and _audio now assert 415 | ValueError |
+| ~~22~~ | ~~tests/test_download.py::test_conditional_download_hashes_with_invalid_hash, test_conditional_download_sources_with_invalid_source~~ done, merged into test_conditional_download_hashes / _sources, marker removed | AssertionError |
+| ~~23~~ | ~~tests/test_download.py::test_conditional_download_with_missing_url~~ done, merged into test_conditional_download, marker removed | AssertionError |
+| ~~24~~ | ~~tests/test_api_assets.py::test_upload_assets_with_moov_at_end_audio~~ done on v4, replaced by test_sanitize_audio_with_strict / _with_moderate | ValueError |
+| 3 | tests/test_ffmpeg.py::test_spawn_frames_with_trim_frame_start | AssertionError |
+| 4 | tests/test_ffmpeg.py::test_restore_audio_with_reused_output_path | AssertionError |
 | 6 | tests/test_filesystem.py::test_move_file_to_missing_directory | FileNotFoundError |
 | 7 | tests/test_workflow.py::test_conditional_get_source_audio_frame_with_frames_mode | AssertionError |
 | 8 | tests/test_ffmpeg.py::test_run_ffmpeg_without_processing | AssertionError |
 | 10 | tests/test_video_manager.py::test_conditional_seek_video_reader_with_negative_frame_index | AssertionError |
 | 21 | tests/test_store_creator.py::test_init_content_with_existing_content | AssertionError |
-| ~~22~~ | ~~tests/test_download.py::test_conditional_download_hashes_with_invalid_hash, test_conditional_download_sources_with_invalid_source~~ done, merged into test_conditional_download_hashes / _sources, marker removed | AssertionError |
-| ~~23~~ | ~~tests/test_download.py::test_conditional_download_with_missing_url~~ done, merged into test_conditional_download, marker removed | AssertionError |
-| ~~24~~ | ~~tests/test_api_assets.py::test_upload_assets_with_moov_at_end_audio~~ done on v4, replaced by test_sanitize_audio_with_strict / _with_moderate | ValueError |
 
 Checked against the patched copy (`regress/patched`):
 - **#1, #2, #3, #4, #6, #7, #8, #10:** turn into XPASS(strict).
