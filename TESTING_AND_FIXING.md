@@ -46,8 +46,8 @@ Includes the two v4 regressions, which work on master and are broken on v4.
 |---|-------|----------|--------|-----|---------------|
 | 5 | v4-only | P1 high | ffmpeg.py + apis/asset_helper.py | ~~sanitize_video fails on moov-at-end MP4/MOV; real-world uploads crash with 500 (see 24)~~ **done on v4** (f4799193, 554e87fe) | yes |
 | 24 | v4-only | P1 high | asset_store.create_asset / ffprobe.extract_video_metadata + extract_audio_metadata | ~~moov-at-end mp4, mov and m4a uploads crash with 500 (`float('N/A')`)~~ **done on v4** (f4799193, 554e87fe) | yes |
-| 1 | v4-regression | P0 critical | workflows/to_video.py | memory strategy (default) drops original audio | yes |
-| 2 | v4-regression | P1 high | workflows/to_video.py | disk strategy trim truncates audio | yes (same diff as 1) |
+| 1 | v4-regression | P0 critical | workflows/to_video.py | ~~memory strategy (default) drops original audio~~ **done on v4** (2d9a5946) | yes |
+| 2 | v4-regression | P1 high | workflows/to_video.py | ~~disk strategy trim truncates audio~~ **done on v4** (2d9a5946) | yes (same diff as 1) |
 | 16 | v4-only | P1 high | apis/endpoints/stream.py | dead /stream websocket stays in store, crashes the session sweeper | no, suggestion only |
 | 3 | v4-only | P2 medium | ffmpeg.spawn_frames | audio-to-image trim start yields truncated video | yes |
 | 11 | v4-only | P2 medium | ffmpeg.replace_audio | audio-to-image trim: audio track not offset (lip desync) | no, suggestion only |
@@ -76,7 +76,7 @@ Includes the two v4 regressions, which work on master and are broken on v4.
 
 Suggested order:
 1. **[top bug, v4-only]**: ~~bugs 5 and 24 together~~ **done on v4** (f4799193, 554e87fe). Ordinary phone, camera and editor MP4/MOV/M4A files with the index at the end crash the upload API with a 500. Users report it, and it is reproduced with replicas of their files.
-2. **[v4-regression]**: bugs 1 and 2. One diff; this should unblock default runs.
+2. **[v4-regression]**: ~~bugs 1 and 2. One diff; this should unblock default runs.~~ **done on v4** (2d9a5946).
 3. **[master+v4]**: bugs 4, 22, 8, 12, 6, 10, 13, 14, 20, 23 on master, then merge into v4.
 4. **[v4-only]**: bugs 16, 3, 11, 7, 15, 17, 19, 21, 18.
 
@@ -102,8 +102,8 @@ Every bug with a deterministic reproduction has a test in the suite marked `@pyt
 
 | # | Test | Raises today |
 |---|------|--------------|
-| 1 | tests/test_image_to_video.py::test_process_memory_with_audio | AssertionError |
-| 2 | tests/test_image_to_video.py::test_process_disk_with_trim_frame | AssertionError |
+| ~~1~~ | ~~tests/test_image_to_video.py::test_process_memory_with_audio~~ done on v4, marker removed | AssertionError |
+| ~~2~~ | ~~tests/test_image_to_video.py::test_process_disk_with_trim_frame~~ done on v4, marker removed | AssertionError |
 | 3 | tests/test_ffmpeg.py::test_spawn_frames_with_trim_frame_start | AssertionError |
 | 4 | tests/test_ffmpeg.py::test_restore_audio_with_reused_output_path | AssertionError |
 | ~~5~~ | ~~tests/test_ffmpeg.py::test_sanitize_video_with_moov_at_end~~ done on v4, replaced by test_sanitize_video_with_strict / _with_moderate | AssertionError |
@@ -133,7 +133,9 @@ The tests for bugs 11 and 12–20 are still only written up in this document.
 # Details
 
 
-## 1. Memory strategy drops original audio
+## ~~1. Memory strategy drops original audio~~
+**Done on v4** (2d9a5946): `merge_frames()` and `restore_audio()` clamp the trim via `conditional_restrict_range()`, against the target video (`restrict_video_range`) for image-to-video and the source audio (`restrict_audio_range`) otherwise, instead of the temp frame count. Verified by CLI on a 30s target with audio: memory, memory+trim and disk+trim keep their audio (30.02s / 10.02s / 10.02s), unfixed v4 has none.
+
 **[v4-regression] · P0 critical** · `facefusion/workflows/to_video.py`
 
 ### Evidence
@@ -226,7 +228,9 @@ Also import `probe_audio_entries` from `facefusion.ffprobe`.
 - This test covers bug 2 as well (the disk iteration).
 
 
-## 2. Disk strategy trim truncates audio
+## ~~2. Disk strategy trim truncates audio~~
+**Done on v4** (2d9a5946), same fix as 1. With `--trim-frame-start 250 --trim-frame-end 500` unfixed v4 dropped the audio completely (range (250, 250)), not only truncated it.
+
 **[v4-regression] · P1 high** · `facefusion/workflows/to_video.py`
 
 ### Evidence

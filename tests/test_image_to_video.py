@@ -99,7 +99,6 @@ def test_process() -> None:
 	state_manager.set_item('trim_frame_start', 0)
 
 
-@pytest.mark.xfail(strict = True, raises = AssertionError, reason = 'TESTING_AND_FIXING.md #1')
 def test_process_memory_with_audio() -> None:
 	state_manager.set_item('workflow_strategy', 'memory')
 	state_manager.set_item('target_path', get_test_example_file('target-240p-48khz.mp4'))
@@ -113,7 +112,6 @@ def test_process_memory_with_audio() -> None:
 	assert probe_audio_entries(get_test_output_path('test-process-memory-with-audio.mp4'), [ 'duration' ]) == { 'duration': '2.000000' }
 
 
-@pytest.mark.xfail(strict = True, raises = AssertionError, reason = 'TESTING_AND_FIXING.md #2')
 def test_process_disk_with_trim_frame() -> None:
 	state_manager.set_item('workflow_strategy', 'disk')
 	state_manager.set_item('target_path', get_test_example_file('target-240p-48khz.mp4'))
