@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 
 from facefusion import process_manager, state_manager
-from facefusion.download import conditional_download, conditional_download_hashes, conditional_download_sources, get_static_download_size, ping_static_url, resolve_download_url, resolve_download_url_by_provider, validate_hash_paths, validate_source_paths
+from facefusion.download import conditional_download, conditional_download_files, conditional_validate_files, get_static_download_size, ping_static_url, resolve_download_url, resolve_download_url_by_provider, validate_file
 from facefusion.filesystem import get_file_size, is_file, remove_file
 from facefusion.hash_helper import create_hash
 from facefusion.types import DownloadSet
@@ -73,7 +73,7 @@ def test_static_ping_url() -> None:
 	assert ping_static_url('invalid') is False
 
 
-def test_conditional_download_hashes() -> None:
+def test_conditional_download_files() -> None:
 	hash_set : DownloadSet =\
 	{
 		'yunet':
@@ -82,8 +82,18 @@ def test_conditional_download_hashes() -> None:
 			'path': '.assets/models/yunet_2023_mar.hash'
 		}
 	}
+	source_set : DownloadSet =\
+	{
+		'yunet':
+		{
+			'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.4.0/yunet_2023_mar.onnx',
+			'path': '.assets/models/yunet_2023_mar.onnx'
+		}
+	}
 
-	assert conditional_download_hashes(hash_set) is True
+	assert conditional_download_files(hash_set) is True
+	assert process_manager.is_pending() is True
+	assert conditional_download_files(source_set) is True
 	assert process_manager.is_pending() is True
 
 	remove_file(get_test_example_file('yunet_2023_mar.hash'))
@@ -96,34 +106,8 @@ def test_conditional_download_hashes() -> None:
 		}
 	}
 
-	assert conditional_download_hashes(hash_set) is True
+	assert conditional_download_files(hash_set) is True
 	assert is_file(get_test_example_file('yunet_2023_mar.hash')) is True
-
-	hash_set =\
-	{
-		'invalid':
-		{
-			'url': 'invalid',
-			'path': 'invalid'
-		}
-	}
-
-	assert conditional_download_hashes(hash_set) is False
-	assert process_manager.is_pending() is True
-
-
-def test_conditional_download_sources() -> None:
-	source_set : DownloadSet =\
-	{
-		'yunet':
-		{
-			'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.4.0/yunet_2023_mar.onnx',
-			'path': '.assets/models/yunet_2023_mar.onnx'
-		}
-	}
-
-	assert conditional_download_sources(source_set) is True
-	assert process_manager.is_pending() is True
 
 	remove_file(get_test_example_file('yunet_2023_mar.onnx'))
 	source_set =\
@@ -135,34 +119,72 @@ def test_conditional_download_sources() -> None:
 		}
 	}
 
-	assert conditional_download_sources(source_set) is True
+	assert conditional_download_files(source_set) is True
 	assert is_file(get_test_example_file('yunet_2023_mar.onnx')) is True
 
-	create_test_source(get_test_output_path('test-conditional-download-sources.onnx'), 'invalid')
+	hash_set =\
+	{
+		'invalid':
+		{
+			'url': 'invalid',
+			'path': 'invalid.hash'
+		}
+	}
+
+	assert conditional_download_files(hash_set) is False
+	assert process_manager.is_pending() is True
+
+	create_test_source(get_test_output_path('test-conditional-download-files.onnx'), 'invalid')
 	source_set =\
 	{
 		'invalid':
 		{
 			'url': 'invalid',
-			'path': get_test_output_path('test-conditional-download-sources.onnx')
+			'path': get_test_output_path('test-conditional-download-files.onnx')
 		}
 	}
 
-	assert conditional_download_sources(source_set) is False
+	assert conditional_download_files(source_set) is False
 	assert process_manager.is_pending() is True
-	assert is_file(get_test_output_path('test-conditional-download-sources.onnx')) is False
+	assert is_file(get_test_output_path('test-conditional-download-files.onnx')) is False
 
 
-def test_validate_hash_paths() -> None:
-	assert validate_hash_paths([ '.assets/models/yunet_2023_mar.hash', 'invalid' ]) == ([ '.assets/models/yunet_2023_mar.hash' ], [ 'invalid' ])
+def test_conditional_validate_files() -> None:
+	file_set : DownloadSet =\
+	{
+		'yunet':
+		{
+			'url': 'https://github.com/facefusion/facefusion-assets/releases/download/models-3.4.0/yunet_2023_mar.onnx',
+			'path': '.assets/models/yunet_2023_mar.onnx'
+		}
+	}
+
+	assert conditional_validate_files(file_set) is True
+
+	create_test_source(get_test_output_path('test-conditional-validate-files.onnx'), 'invalid')
+	file_set =\
+	{
+		'invalid':
+		{
+			'url': 'invalid',
+			'path': get_test_output_path('test-conditional-validate-files.onnx')
+		}
+	}
+
+	assert conditional_validate_files(file_set) is False
+	assert is_file(get_test_output_path('test-conditional-validate-files.onnx')) is False
 
 
-def test_validate_source_paths() -> None:
-	create_test_source(get_test_output_path('test-validate-source-paths-valid.onnx'), create_hash(bytes([ 1, 2, 3 ])))
-	create_test_source(get_test_output_path('test-validate-source-paths-invalid.onnx'), 'invalid')
+def test_validate_file() -> None:
+	create_test_source(get_test_output_path('test-validate-file-valid.onnx'), create_hash(bytes([ 1, 2, 3 ])))
+	create_test_source(get_test_output_path('test-validate-file-invalid.onnx'), 'invalid')
 
-	assert validate_source_paths([ '.assets/models/yunet_2023_mar.onnx', get_test_output_path('test-validate-source-paths-valid.onnx') ]) == ([ '.assets/models/yunet_2023_mar.onnx', get_test_output_path('test-validate-source-paths-valid.onnx') ], [])
-	assert validate_source_paths([ get_test_output_path('test-validate-source-paths-invalid.onnx'), 'invalid' ]) == ([], [ get_test_output_path('test-validate-source-paths-invalid.onnx'), 'invalid' ])
+	assert validate_file('.assets/models/yunet_2023_mar.hash') is True
+	assert validate_file('.assets/models/yunet_2023_mar.onnx') is True
+	assert validate_file(get_test_output_path('test-validate-file-valid.onnx')) is True
+	assert validate_file('invalid.hash') is False
+	assert validate_file(get_test_output_path('test-validate-file-invalid.onnx')) is False
+	assert validate_file('invalid') is False
 
 
 def test_resolve_download_url() -> None:
