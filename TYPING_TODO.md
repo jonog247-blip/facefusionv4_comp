@@ -8,12 +8,13 @@ The repo has 25 type ignores: 23 in `facefusion/`, 2 in `tests/`. With all of th
 
 ## Labels
 
-Every item was checked against local `v4` (0d86dd61, after the "make mypy happy" commits 6478ef24..0d86dd61) and local `master` (72470819), on throwaway worktrees with `mypy --warn-unused-ignores facefusion tests` (mypy 1.18.2, numpy 2.4.6, opencv 5.0). The 25 ignores above are exactly the ones on v4 today.
+Every item was checked against local `v4` (0d86dd61, after the "make mypy happy" commits 6478ef24..0d86dd61) and local `master` (72470819), on throwaway worktrees with `mypy --warn-unused-ignores facefusion tests` (mypy 1.18.2, numpy 2.4.6, opencv 5.0). The 25 ignores above are exactly the ones on v4 today. The master side was rechecked on `patch-3.9.2` (39ea6915), which ports the v4 typing fixes and ignores the gradio errors; both CI mypy steps pass there.
 
 Scope (where to fix):
 - **[master+v4]**: the issue exists on both. Fix on master, merge forward into v4. Master line numbers are given where they differ.
 - **[v4-only]**: the code does not exist on master. Fix on v4.
 - **[master-only]**: the issue exists on master only. Fix on master.
+- **won't fix**: ignored on purpose, no fix planned.
 
 Done items are struck through with the v4 commit that fixed them. None of the items below is done on v4: the mypy commits fixed other ignores (`asset_helper.py`, `endpoints/assets.py`, `endpoints/jobs.py`, `job_manager.py`, `normalizer.py`, `ffmpeg.py` encoder set), and 7d0884cb added the ignores for 2.5 and 2.6.
 
@@ -42,11 +43,11 @@ Done items are struck through with the v4 commit that fixed them. None of the it
 | 1 | master+v4 | types.py, face_masker.py, face_aligner.py, face_helper.py, frame_colorizer, image_to_video.py | 11 | delete, unused |
 | 2.2 | master+v4 | state_manager.init_item / set_item | 2 | cast, port by hand (master uses `STATE_SET`) |
 | 2.4 | master+v4 | workflows/image_to_image.py | 1 | annotate the task list |
-| 2.5 | master+v4 | face_masker.create_area_mask | 1 | `astype(numpy.float32)`, master reports it as an error today |
-| 2.6 | master+v4 | audio.extract_audio_frames | 1 | `tolist()`, master reports it as an error today |
-| ~~-~~ | ~~master+v4~~ | ~~ffmpeg.get_available_encoder_set~~ | ~~3~~ | ~~cast the encoder~~ **done on v4** (0d86dd61), master still has 4 (`ffmpeg.py:142, 143, 148, 149`) |
-| ~~-~~ | ~~master+v4~~ | ~~jobs/job_manager.read_job_file, create_job_file, update_job_file~~ | ~~3~~ | ~~cast `Job` / `Content`~~ **done on v4** (0d86dd61), master still has them (`job_manager.py:210, 218, 227`) |
-| ~~-~~ | ~~master+v4~~ | ~~normalizer.normalize_color, normalize_space~~ | ~~8~~ | ~~unused~~ **done on v4** (0d86dd61), master still has them |
+| 2.5 | master+v4 | face_masker.create_area_mask | 1 | `astype(numpy.float32)`, patch-3.9.2 carries the same ignore since 39ea6915 |
+| 2.6 | master+v4 | audio.extract_audio_frames | 1 | `tolist()`, patch-3.9.2 carries the same ignore since 39ea6915 |
+| ~~-~~ | ~~master+v4~~ | ~~ffmpeg.get_available_encoder_set~~ | ~~3~~ | ~~cast the encoder~~ **done on v4** (0d86dd61), **done on patch-3.9.2** (39ea6915) |
+| ~~-~~ | ~~master+v4~~ | ~~jobs/job_manager.read_job_file, create_job_file, update_job_file~~ | ~~3~~ | ~~cast `Job` / `Content`~~ **done on v4** (0d86dd61), **done on patch-3.9.2** (39ea6915) |
+| ~~-~~ | ~~master+v4~~ | ~~normalizer.normalize_color, normalize_space~~ | ~~8~~ | ~~unused~~ **done on v4** (0d86dd61) by rewriting the functions to take `Any`, master still needs them |
 
 ### master-only (fix on master)
 
@@ -58,12 +59,12 @@ Found by the same mypy run, not covered by the sections below.
 | master-only | state_manager.py:10, 29 | unused ignores |
 | master-only | uis/components/job_runner.py:87 | unused ignore |
 | master-only | uis/components/instant_runner.py:95 | unused ignore |
-| master-only | uis/core.py:80 | gradio type error |
-| master-only | uis/components/benchmark_options.py:30, 42 | gradio type errors |
-| master-only | uis/components/face_selector.py:69, 74 | gradio type errors |
+| ~~master-only~~ | ~~uis/core.py:80~~ | ~~gradio type error~~ **won't fix**, ignored on patch-3.9.2 (39ea6915) |
+| ~~master-only~~ | ~~uis/components/benchmark_options.py:30, 42~~ | ~~gradio type errors~~ **won't fix**, ignored on patch-3.9.2 (39ea6915) |
+| ~~master-only~~ | ~~uis/components/face_selector.py:69, 74~~ | ~~gradio type errors~~ **won't fix**, ignored on patch-3.9.2 (39ea6915) |
 
 Suggested order:
-1. **[master+v4]**: section 1, 2.2, 2.4 (`image_to_image.py`), 2.5 and 2.6 on master, together with the master-only findings, then merge into v4. 2.5 and 2.6 are real errors on master today.
+1. **[master+v4]**: section 1, 2.2, 2.4 (`image_to_image.py`), 2.5 and 2.6 on master, together with the master-only unused ignores, then merge into v4. 2.5 and 2.6 are ignored on v4 and patch-3.9.2 now, the real fixes are still open.
 2. **[v4-only]**: 2.1, 2.3, 2.4 (the other three workflow files), 2.7, 2.8 and 2.9 on v4.
 3. **CI**: install the requirements in the lint job and enable `warn_unused_ignores` once both branches are clean, see below.
 
@@ -155,7 +156,7 @@ This is a real fix, not a cast.
 
 ### 2.5 `facefusion/face_masker.py:237`: `create_area_mask` **[master+v4]**
 
-On master the line has no ignore, so mypy reports it there as an error today. On v4 the ignore was added in 7d0884cb.
+On v4 the ignore was added in 7d0884cb, on patch-3.9.2 in 39ea6915.
 
 The mask is created as float32. `(... - 0.5) * 2` on the blur result promotes it to float64, so the function silently returns a different dtype than it declares.
 
@@ -165,7 +166,7 @@ area_mask = ((cv2.GaussianBlur(area_mask.clip(0, 1), (0, 0), 5).clip(0.5, 1) - 0
 
 ### 2.6 `facefusion/audio.py:76`: `extract_audio_frames` (2 errors on one line) **[master+v4]**
 
-On master (line 74) there is no ignore, so mypy reports both errors there today. On v4 the ignore was added in 7d0884cb.
+On v4 the ignore was added in 7d0884cb, on patch-3.9.2 (line 74) in 39ea6915.
 
 `indices` is an int16 numpy array, so `index` is a numpy scalar. numpy's typing does not accept that as a slice bound.
 
