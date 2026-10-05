@@ -1,0 +1,201 @@
+@import 'tailwindcss';
+
+/*
+ * FaceFusion Studio — design tokens.
+ *
+ * The palette mirrors macOS Sonoma / visionOS: near-black canvas, translucent
+ * "glass" chrome, one accent (Apple blue) and the system status colours.
+ */
+
+@theme {
+	--color-app: #08080a;
+	--color-app-elevated: #0e0e11;
+	--color-ink: #f5f5f7;
+	--color-ink-soft: #a1a1a6;
+	--color-ink-faint: #6e6e73;
+	--color-line: rgba(255, 255, 255, 0.08);
+	--color-line-strong: rgba(255, 255, 255, 0.16);
+	--color-apple: #0a84ff;
+	--color-apple-hover: #0071e3;
+	--color-apple-soft: rgba(10, 132, 255, 0.16);
+	--color-success: #30d158;
+	--color-warning: #ffd60a;
+	--color-danger: #ff453a;
+	--color-purple: #bf5af2;
+	--color-teal: #40c8e0;
+
+	--font-sans:
+		-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', Inter, 'Segoe UI', Roboto,
+		system-ui, sans-serif;
+	--font-mono: 'SF Mono', ui-monospace, 'JetBrains Mono', Menlo, monospace;
+
+	--radius-panel: 1rem;
+	--radius-control: 0.625rem;
+
+	--ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@layer base {
+	:root {
+		color-scheme: dark;
+		--bg-surface: rgba(22, 22, 26, 0.72);
+		--bg-surface-elevated: rgba(30, 30, 36, 0.86);
+		--bg-surface-hover: rgba(255, 255, 255, 0.06);
+		--accent-glow: rgba(10, 132, 255, 0.25);
+	}
+
+	* {
+		min-width: 0;
+	}
+
+	html,
+	body,
+	#root {
+		height: 100%;
+	}
+
+	body {
+		margin: 0;
+		background-color: var(--color-app);
+		color: var(--color-ink);
+		font-family: var(--font-sans);
+		font-synthesis-weight: none;
+		text-rendering: optimizeLegibility;
+		-webkit-font-smoothing: antialiased;
+		overflow: hidden;
+		overscroll-behavior: none;
+	}
+
+	button,
+	input,
+	select,
+	textarea {
+		font: inherit;
+		color: inherit;
+	}
+
+	/* Numeric readouts must not jitter while polling. */
+	.tabular {
+		font-variant-numeric: tabular-nums;
+	}
+
+	:focus-visible {
+		outline: 2px solid var(--color-apple);
+		outline-offset: 2px;
+	}
+}
+
+@layer components {
+	.glass {
+		background: var(--bg-surface);
+		backdrop-filter: blur(30px) saturate(180%);
+		-webkit-backdrop-filter: blur(30px) saturate(180%);
+		border: 1px solid var(--line);
+	}
+
+	.glass-elevated {
+		background: var(--bg-surface-elevated);
+		backdrop-filter: blur(20px) saturate(160%);
+		-webkit-backdrop-filter: blur(20px) saturate(160%);
+		border: 1px solid var(--line);
+	}
+
+	.card {
+		background: var(--bg-surface-elevated);
+		border: 1px solid var(--line);
+		border-radius: var(--radius-panel);
+	}
+
+	.hairline {
+		border-color: var(--line);
+	}
+
+	/* Section headers inside the side rails. */
+	.eyebrow {
+		font-size: 0.6875rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--color-ink-faint);
+	}
+
+	.no-scrollbar {
+		scrollbar-width: none;
+	}
+
+	.no-scrollbar::-webkit-scrollbar {
+		display: none;
+	}
+}
+
+@layer utilities {
+	.scroll-thin {
+		scrollbar-width: thin;
+		scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+	}
+
+	.scroll-thin::-webkit-scrollbar {
+		width: 6px;
+		height: 6px;
+	}
+
+	.scroll-thin::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.scroll-thin::-webkit-scrollbar-thumb {
+		background: rgba(255, 255, 255, 0.14);
+		border-radius: 9999px;
+	}
+
+	.scroll-thin::-webkit-scrollbar-thumb:hover {
+		background: rgba(255, 255, 255, 0.28);
+	}
+
+	.glow-apple {
+		box-shadow:
+			0 0 0 1px rgba(10, 132, 255, 0.35),
+			0 8px 30px -8px var(--accent-glow);
+	}
+
+	.animate-in-up {
+		animation: fade-up 260ms var(--ease-spring) both;
+	}
+
+	.animate-pulse-soft {
+		animation: pulse-soft 1.8s ease-in-out infinite;
+	}
+}
+
+@keyframes fade-up {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+@keyframes pulse-soft {
+	0%,
+	100% {
+		opacity: 0.45;
+	}
+
+	50% {
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}
