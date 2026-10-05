@@ -56,8 +56,16 @@ def create_inference_pool(model_source_set : DownloadSet, inference_providers : 
 
 		if is_file(model_path):
 			inference_pool[model_name] = create_inference_session(model_path, inference_providers)
+		else:
+			model_file_name = get_file_name(model_path)
+			logger.error(translator.get('loading_model_missing').format(model_name = model_file_name), __name__)
 
 	return inference_pool
+
+
+def clear_inference_pool_set() -> None:
+	for app_context in INFERENCE_POOL_SET:
+		INFERENCE_POOL_SET.get(app_context).clear()
 
 
 def clear_inference_pool(module_name : str, model_names : List[str]) -> None:

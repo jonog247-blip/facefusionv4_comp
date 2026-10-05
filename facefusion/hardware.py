@@ -4,13 +4,33 @@ import platform
 import re
 import shutil
 import subprocess
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 import facefusion.choices
-from facefusion import state_manager
+from facefusion import config, state_manager
 from facefusion.common_helper import get_first, is_linux, is_macos, is_windows
 from facefusion.execution import detect_execution_devices, get_available_execution_providers
 from facefusion.types import ExecutionProvider, HardwareGpu, HardwareMemory, HardwarePreset, HardwarePresetMode, HardwareProfile
+
+PRESET_STATE_KEY_SET : Dict[str, Tuple[str, str]] =\
+{
+	'execution_providers': ('execution', 'execution_providers'),
+	'execution_thread_count': ('execution', 'execution_thread_count'),
+	'video_memory_strategy': ('memory', 'video_memory_strategy'),
+	'face_detector_model': ('face_detector', 'face_detector_model'),
+	'face_detector_size': ('face_detector', 'face_detector_size'),
+	'face_landmarker_model': ('face_landmarker', 'face_landmarker_model'),
+	'face_swapper_model': ('processors', 'face_swapper_model'),
+	'face_swapper_pixel_boost': ('processors', 'face_swapper_pixel_boost'),
+	'face_swapper_weight': ('processors', 'face_swapper_weight'),
+	'face_enhancer_model': ('processors', 'face_enhancer_model'),
+	'face_enhancer_blend': ('processors', 'face_enhancer_blend'),
+	'temp_frame_format': ('frame_extraction', 'temp_frame_format'),
+	'output_image_quality': ('output_creation', 'output_image_quality'),
+	'output_video_quality': ('output_creation', 'output_video_quality'),
+	'output_video_encoder': ('output_creation', 'output_video_encoder'),
+	'output_video_preset': ('output_creation', 'output_video_preset')
+}
 
 HARDWARE_PRESET_MODE_LABELS : Dict[str, str] =\
 {
@@ -417,9 +437,34 @@ def create_hardware_preset(profile : HardwareProfile, mode : HardwarePresetMode 
 	return preset
 
 
+def apply_auto_preset() -> bool:
+	if not state_manager.get_item('hardware_auto_preset'):
+		return False
+
+	hardware_profile = detect_hardware_profile(refresh = True)
+	preset_mode = resolve_preset_mode(state_manager.get_item('hardware_preset_mode'))
+	hardware_preset = create_hardware_preset(hardware_profile, preset_mode)
+	# settings that are written into the config file are respected, the preset only fills in what is left open
+	preset_settings =\
+	{
+		state_key: state_value for state_key, state_value in hardware_preset.get('settings').items() if not is_preset_state_key_customized(state_key)
+	}
+	apply_hardware_preset(cast(HardwarePreset, { **hardware_preset, 'settings': preset_settings }))
+	return True
+
+
+def is_preset_state_key_customized(state_key : str) -> bool:
+	config_section, config_option = PRESET_STATE_KEY_SET.get(state_key, (None, None))
+
+	if config_section and config_option:
+		return bool(config.get_str_value(config_section, config_option))
+	return False
+
+
 def apply_hardware_preset(preset : HardwarePreset) -> None:
+	# writes into the cli and the ui state, so that the preset is used by the interface and by the processing
 	for state_key, state_value in preset.get('settings').items():
-		state_manager.set_item(state_key, state_value)
+		state_manager.init_item(state_key, state_value)
 
 
 def format_hardware_report(profile : HardwareProfile, preset : Optional[HardwarePreset] = None, plain : bool = False) -> str:

@@ -5,14 +5,14 @@ import cv2
 import gradio
 import numpy
 
-from facefusion import logger, process_manager, state_manager, translator
+from facefusion import download, face_detector, face_landmarker, face_recognizer, logger, process_manager, state_manager, translator
 from facefusion.audio import create_empty_audio_frame, get_voice_frame
 from facefusion.common_helper import get_first, get_middle
 from facefusion.content_analyser import analyse_frame
 from facefusion.face_creator import get_one_face
 from facefusion.face_selector import select_faces
 from facefusion.face_store import clear_faces
-from facefusion.filesystem import filter_audio_paths, is_image, is_video
+from facefusion.filesystem import filter_audio_paths, get_file_name, is_image, is_video
 from facefusion.processors.core import get_processors_modules
 from facefusion.types import AudioFrame, Face, Mask, VisionFrame
 from facefusion.uis import choices as uis_choices
@@ -219,6 +219,24 @@ def clear_and_update_preview_image(preview_mode : PreviewMode, preview_resolutio
 	return update_preview_image(preview_mode, preview_resolution, frame_number)
 
 
+def find_missing_model_file_names() -> List[str]:
+	missing_model_file_names = []
+	check_modules =\
+	[
+		face_detector,
+		face_landmarker,
+		face_recognizer
+	] + get_processors_modules(state_manager.get_item('processors'))
+
+	for check_module in check_modules:
+		model_source_set = download.get_model_source_set(check_module)
+
+		for missing_source_path in download.find_missing_source_paths(model_source_set):
+			missing_model_file_names.append(get_file_name(missing_source_path))
+
+	return missing_model_file_names
+
+
 def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_frames : List[VisionFrame], source_audio_frame : AudioFrame, source_voice_frame : AudioFrame, target_vision_frames : List[VisionFrame], preview_mode : PreviewMode, preview_resolution : str) -> VisionFrame:
 	target_vision_frame = get_middle(target_vision_frames)
 	target_vision_frame = restrict_frame(target_vision_frame, unpack_resolution(preview_resolution))
@@ -226,6 +244,17 @@ def process_preview_frame(reference_vision_frame : VisionFrame, source_vision_fr
 	target_vision_frame = merge_vision_mask(target_vision_frame, temp_vision_mask)
 	target_vision_frames = [ restrict_frame(vision_frame, unpack_resolution(preview_resolution))[:, :, :3] for vision_frame in target_vision_frames ]
 	temp_vision_frame = target_vision_frame.copy()
+	missing_model_file_names = find_missing_model_file_names()
+
+	if missing_model_file_names:
+		model_file_names = ', '.join(missing_model_file_names)
+		logger.error(translator.get('models_missing').format(model_file_names = model_file_names), __name__)
+		gradio.Warning(translator.get('models_missing_warning').format(model_file_names = model_file_names))
+
+		if preview_mode == 'frame-by-frame':
+			return numpy.hstack((target_vision_frame[:, :, :3], target_vision_frame[:, :, :3]))
+
+		return temp_vision_frame
 
 	if analyse_frame(target_vision_frame[:, :, :3]):
 		if preview_mode == 'frame-by-frame':

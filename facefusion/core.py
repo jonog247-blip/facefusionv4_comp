@@ -44,6 +44,10 @@ def route(args : Args) -> None:
 		error_code = force_download()
 		hard_exit(error_code)
 
+	if state_manager.get_item('command') == 'download-models':
+		error_code = download_models()
+		hard_exit(error_code)
+
 	if state_manager.get_item('command') == 'hardware-info':
 		error_code = print_hardware_info()
 		hard_exit(error_code)
@@ -62,6 +66,8 @@ def route(args : Args) -> None:
 	if state_manager.get_item('command') == 'run':
 		import facefusion.uis.core as ui
 
+		# the hardware preset is applied before the pre check, so that the models of the preset are downloaded
+		hardware.apply_auto_preset()
 		if not common_pre_check() or not processors_pre_check():
 			hard_exit(2)
 		for ui_layout in ui.get_ui_layouts_modules(state_manager.get_item('ui_layouts')):
@@ -151,6 +157,15 @@ def force_download() -> ErrorCode:
 					if not conditional_download_hashes(model_hash_set) or not conditional_download_sources(model_source_set):
 						return 1
 
+	return 0
+
+
+def download_models() -> ErrorCode:
+	# the auto preset is applied first, so that the models of the preset are downloaded and not the models of the config
+	hardware.apply_auto_preset()
+
+	if not processors_pre_check():
+		return 1
 	return 0
 
 

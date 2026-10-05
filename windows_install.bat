@@ -5,39 +5,32 @@ title FaceFusion Studio - installer
 set "ROOT=%~dp0"
 if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
 set "ENV_NAME=facefusion"
-set "PY_VERSION=3.12"
+set "MINI_PATH=%USERPROFILE%\miniconda3"
+set "CONDA_ROOT="
 set "HAS_NVIDIA=0"
-set "MINI_ROOT=%USERPROFILE%\miniconda3"
 
 echo.
 echo  ================================================================
-echo    FaceFusion Studio - Windows installer
-echo    conda environment + ffmpeg + NVIDIA CUDA runtime
+echo    FaceFusion Studio - automatic installation
+echo ----------------------------------------------------------------
+echo    installs a private conda environment with python, ffmpeg,
+echo    the CUDA runtime and every python package FaceFusion needs
 echo  ================================================================
 echo.
-
-cd /d "%ROOT%"
 
 if not exist "%ROOT%\facefusion.py" (
 	echo  [ERROR] facefusion.py was not found next to this script.
-	echo          Keep windows_install.bat inside the FaceFusion folder.
-	echo.
-	pause
-	exit /b 1
-)
-if not exist "%ROOT%\requirements.txt" (
-	echo  [ERROR] requirements.txt was not found next to this script.
+	echo          keep windows_install.bat inside the FaceFusion folder.
 	echo.
 	pause
 	exit /b 1
 )
 
-rem ---------------------------------------------------------------- conda
-set "CONDA_ROOT="
+cd /d "%ROOT%"
 
-if defined CONDA_PREFIX (
-	if exist "%CONDA_PREFIX%\Scripts\activate.bat" set "CONDA_ROOT=%CONDA_PREFIX%"
-)
+echo  [..]   looking for conda ...
+
+if defined CONDA_PREFIX if exist "%CONDA_PREFIX%\Scripts\activate.bat" set "CONDA_ROOT=%CONDA_PREFIX%"
 
 for %%D in (
 	"%USERPROFILE%\miniconda3"
@@ -48,7 +41,6 @@ for %%D in (
 	"%LOCALAPPDATA%\Continuum\anaconda3"
 	"%ProgramData%\miniconda3"
 	"%ProgramData%\Anaconda3"
-	"%ProgramFiles%\miniconda3"
 	"C:\miniconda3"
 	"C:\anaconda3"
 ) do (
@@ -63,188 +55,206 @@ if not defined CONDA_ROOT (
 	)
 )
 
-if defined CONDA_ROOT echo  [OK]   conda found at !CONDA_ROOT!
+if defined CONDA_ROOT goto :have_conda
 
-if not defined CONDA_ROOT (
-	echo  [INFO] conda was not found, Miniconda will be installed.
-	echo         Miniconda is a small Python distribution, it takes a few minutes.
-	echo.
-	if not "%USERPROFILE%"=="%USERPROFILE: =%" set "MINI_ROOT=C:\miniconda3"
-	echo  [INFO] installing Miniconda into !MINI_ROOT! ...
-	curl -L --fail --output "%TEMP%\miniconda_installer.exe" https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
-	if errorlevel 1 (
-		echo  [ERROR] the Miniconda download failed, check the internet connection.
-		echo          Manual download: https://docs.conda.io/en/latest/miniconda.html
-		echo.
-		pause
-		exit /b 1
-	)
-	start /wait "" "%TEMP%\miniconda_installer.exe" /InstallationType=JustMe /RegisterPython=0 /AddToPath=0 /S /D=!MINI_ROOT!
-	del /q "%TEMP%\miniconda_installer.exe" >nul 2>nul
-	if not exist "!MINI_ROOT!\Scripts\activate.bat" (
-		echo  [ERROR] the Miniconda installation failed.
-		echo          Install Miniconda manually and run this script again.
-		echo.
-		pause
-		exit /b 1
-	)
-	set "CONDA_ROOT=!MINI_ROOT!"
-	echo  [OK]   Miniconda installed.
+echo  [..]   conda was not found, installing Miniconda3 ...
+echo.
+
+echo %USERPROFILE% | find " " >nul && set "MINI_PATH=C:\miniconda3"
+
+if exist "%MINI_PATH%\Scripts\activate.bat" (
+	set "CONDA_ROOT=%MINI_PATH%"
+	goto :have_conda
 )
 
-call "!CONDA_ROOT!\Scripts\activate.bat" "!CONDA_ROOT!"
-if errorlevel 1 (
-	echo  [ERROR] conda could not be activated.
-	echo.
-	pause
-	exit /b 1
-)
+set "MINI_INSTALLER=%TEMP%\facefusion_miniconda.exe"
+echo  [..]   downloading the Miniconda3 installer ...
+curl -L --fail --retry 3 --max-time 900 -o "%MINI_INSTALLER%" https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
+if errorlevel 1 goto :no_miniconda_download
 
-rem ---------------------------------------------------------- environment
-call conda env list | findstr /r /c:"^%ENV_NAME% " >nul
+echo  [..]   installing Miniconda3 into %MINI_PATH% - this takes a few minutes ...
+start /wait "" "%MINI_INSTALLER%" /InstallationType=JustMe /RegisterPython=0 /AddToPath=0 /S /D=%MINI_PATH%
+
+if not exist "%MINI_PATH%\Scripts\activate.bat" goto :no_miniconda_install
+set "CONDA_ROOT=%MINI_PATH%"
+goto :have_conda
+
+:no_miniconda_download
+echo  [ERROR] Miniconda3 could not be downloaded.
+echo          check the internet connection and run this script again.
+echo.
+pause
+exit /b 1
+
+:no_miniconda_install
+echo  [ERROR] the silent Miniconda3 installation failed.
+echo          install Miniconda3 manually, then run this script again.
+echo.
+pause
+exit /b 1
+
+:have_conda
+echo  [ok]   conda found at %CONDA_ROOT%
+
+call "%CONDA_ROOT%\Scripts\activate.bat" "%CONDA_ROOT%"
+
+echo  [..]   preparing the "%ENV_NAME%" environment ...
+
+conda env list | findstr /r /c:"^%ENV_NAME% " >nul
 if errorlevel 1 (
-	echo  [INFO] creating the conda environment "%ENV_NAME%" with Python %PY_VERSION% ...
-	call conda create -y -n "%ENV_NAME%" python=%PY_VERSION% pip
-	if errorlevel 1 (
-		echo  [ERROR] conda could not create the environment.
-		echo.
-		pause
-		exit /b 1
-	)
+	echo  [..]   creating the conda environment "%ENV_NAME%" with python 3.12 ...
+	call conda create -y -n "%ENV_NAME%" python=3.12 pip
 ) else (
-	echo  [OK]   the conda environment "%ENV_NAME%" already exists.
+	echo  [ok]   the conda environment "%ENV_NAME%" already exists
 )
 
 call conda activate "%ENV_NAME%"
+if errorlevel 1 goto :no_env
+
+python -c "import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)" >nul 2>nul
 if errorlevel 1 (
-	echo  [ERROR] the conda environment "%ENV_NAME%" could not be activated.
+	echo  [ERROR] the environment "%ENV_NAME%" must use python 3.12 or newer.
+	echo          delete it with:  conda env remove -n %ENV_NAME%
+	echo          then run this script again.
 	echo.
 	pause
 	exit /b 1
 )
 
-python -c "import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)"
-if errorlevel 1 (
-	echo  [ERROR] Python 3.12 or newer is required inside the environment.
-	echo.
-	pause
-	exit /b 1
-)
+python -m pip install --upgrade pip
+if errorlevel 1 goto :no_pip
 
-python -m pip install --upgrade --quiet pip wheel setuptools
-if errorlevel 1 (
-	echo  [ERROR] pip could not be updated.
-	echo.
-	pause
-	exit /b 1
-)
-echo  [OK]   the environment is active: !CONDA_PREFIX!
-
-rem --------------------------------------------------------------- ffmpeg
+echo.
 where ffmpeg >nul 2>nul
-if errorlevel 1 (
-	echo  [INFO] installing ffmpeg ...
-	call conda install -y -q -c conda-forge ffmpeg
-)
-where ffmpeg >nul 2>nul
-if errorlevel 1 (
-	echo  [ERROR] ffmpeg could not be installed.
-	echo          Install it with:  winget install -e --id Gyan.FFmpeg --version 7.0.2
-	echo          or with:          conda install -c conda-forge ffmpeg
-	echo.
-	pause
-	exit /b 1
-)
-echo  [OK]   ffmpeg is available.
+if errorlevel 1 goto :no_ffmpeg
+where ffprobe >nul 2>nul
+if errorlevel 1 goto :no_ffmpeg
 
-rem ------------------------------------------------------------ cuda gpu
-nvidia-smi >nul 2>nul
+echo  [ok]   ffmpeg is available
+goto :self_test
+
+:no_ffmpeg
+echo  [..]   installing ffmpeg ...
+call conda install -y -q -c conda-forge ffmpeg
+call conda activate "%ENV_NAME%"
+where ffmpeg >nul 2>nul
+if errorlevel 1 goto :no_ffprobe
+where ffprobe >nul 2>nul
+if errorlevel 1 goto :no_ffprobe
+echo  [ok]   ffmpeg is available
+goto :self_test
+
+:no_ffprobe
+echo  [ERROR] ffmpeg could not be installed automatically.
+echo          install it manually, then run this script again:
+echo            winget install -e --id Gyan.FFmpeg --version 7.0.2
+echo.
+pause
+exit /b 1
+
+:self_test
+echo.
+where nvidia-smi >nul 2>nul
 if errorlevel 1 goto :no_gpu
 
 set "HAS_NVIDIA=1"
-echo  [OK]   NVIDIA driver detected.
-nvidia-smi -L
-
-echo  [INFO] installing the CUDA 12.9.1 runtime and cuDNN 9.10.0, this downloads around 2 GB ...
-call conda tos accept --override-channels --channel nvidia >nul 2>nul
-call conda tos accept --override-channels --channel conda-forge >nul 2>nul
-call conda tos accept --override-channels --channel defaults >nul 2>nul
-call conda install -y -c nvidia/label/cuda-12.9.1::cuda-runtime nvidia/label/cudnn-9.10.0::cudnn
+echo  [ok]   NVIDIA GPU detected
+echo  [..]   installing the CUDA 12.9.1 runtime and cuDNN 9.10.0 - this downloads around 2 GB ...
+call conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main >nul 2>nul
+call conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r >nul 2>nul
+call conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/msys2 >nul 2>nul
+call conda install -y -q nvidia/label/cuda-12.9.1::cuda-runtime nvidia/label/cudnn-9.10.0::cudnn
 if errorlevel 1 (
-	echo  [WARN] the CUDA runtime could not be installed from the conda channel.
-	echo         installing the pip CUDA wheels as a fallback ...
-	python -m pip install nvidia-cuda-runtime-cu12==12.8.90 nvidia-cublas-cu12==12.8.4.1 nvidia-cudnn-cu12==9.8.0.87
-	if errorlevel 1 (
-		echo  [ERROR] the CUDA runtime could not be installed.
-		echo.
-		pause
-		exit /b 1
-	)
+	echo  [warn] the CUDA runtime could not be installed from the nvidia channel.
+	echo         the python wheels below are used as a fallback instead.
+	call python -m pip install nvidia-cuda-runtime-cu12==12.8.90 nvidia-cublas-cu12==12.8.4.1 nvidia-cudnn-cu12==9.8.0.87
 )
 
-echo  [INFO] installing the Python libraries ...
-python install.py cuda@12
-if errorlevel 1 (
-	echo  [ERROR] the Python libraries could not be installed.
-	echo.
-	pause
-	exit /b 1
-)
-goto :self_test
+call conda activate "%ENV_NAME%"
+echo  [..]   installing the python packages ...
+python install.py cuda@12 --skip-conda
+if errorlevel 1 goto :deps_error
+goto :self_test_verify
 
 :no_gpu
-echo  [WARN] nvidia-smi was not found - no NVIDIA driver detected.
-echo         The CPU runtime will be installed, the app will still run.
-python install.py default
-if errorlevel 1 (
-	echo  [ERROR] the Python libraries could not be installed.
-	echo.
-	pause
-	exit /b 1
-)
+echo  [warn] nvidia-smi was not found - no NVIDIA driver detected.
+echo         the CPU runtime is installed, the app still runs.
+echo  [..]   installing the python packages ...
+python install.py default --skip-conda
+if errorlevel 1 goto :deps_error
 
-rem ------------------------------------------------------------ self test
-:self_test
+:self_test_verify
 echo.
-echo  [INFO] verifying the installation ...
-python -c "import onnxruntime, cv2, gradio, numpy, scipy; print('onnxruntime', onnxruntime.__version__); print('providers', ', '.join(onnxruntime.get_available_providers()))"
-if errorlevel 1 (
-	echo  [ERROR] the self test failed.
-	echo.
-	pause
-	exit /b 1
-)
+echo  [..]   self test ...
+python -c "import onnxruntime, cv2, gradio, numpy, scipy; print('       onnxruntime', onnxruntime.__version__); print('       providers', ', '.join(onnxruntime.get_available_providers()))"
+if errorlevel 1 goto :deps_error
 
-python -c "import onnxruntime, sys; sys.exit(0 if 'CUDAExecutionProvider' in onnxruntime.get_available_providers() else 1)"
+python -c "import onnxruntime, sys; sys.exit(0 if 'CUDAExecutionProvider' in onnxruntime.get_available_providers() else 1)" >nul 2>nul
 if errorlevel 1 goto :no_cuda
-echo  [OK]   CUDA inference is ready.
+echo  [ok]   CUDA inference is ready
 goto :write_env
 
 :no_cuda
 if "%HAS_NVIDIA%"=="1" (
-	echo.
-	echo  [WARN] CUDAExecutionProvider is not available.
-	echo         Update to the latest NVIDIA driver and run windows_install.bat again.
+	echo  [warn] CUDAExecutionProvider is not available.
+	echo         update to the latest NVIDIA driver and run this script again.
 )
 
 :write_env
-
-> "%ROOT%\.ff_env.bat" echo set "FF_CONDA_ROOT=!CONDA_ROOT!"
+echo.
+> "%ROOT%\.ff_env.bat" echo set "FF_CONDA_ROOT=%CONDA_ROOT%"
 >> "%ROOT%\.ff_env.bat" echo set "FF_ENV_NAME=%ENV_NAME%"
 
-echo.
 echo  ================================================================
 echo    Installation finished
 echo ----------------------------------------------------------------
 echo    start the app with:  windows_launch.bat
 echo  ================================================================
 echo.
-set "DOWNLOAD_MODELS=N"
-set /p "DOWNLOAD_MODELS=Download all models now (about 1-2 GB) [y/N]: "
-if /i "%DOWNLOAD_MODELS%"=="y" (
-	echo  [INFO] downloading models, this takes a while ...
-	python facefusion.py force-download --download-scope full
-)
+set "DOWNLOAD_MODELS="
+set /p "DOWNLOAD_MODELS=Download the models for the detected hardware now (recommended) [Y/n]: "
+if /i "%DOWNLOAD_MODELS%"=="n" goto :models_skipped
+if /i "%DOWNLOAD_MODELS%"=="no" goto :models_skipped
+echo  [..]   downloading the models, this can take a few minutes ...
+python facefusion.py download-models
+if errorlevel 1 goto :models_failed
+echo  [ok]   the models are ready
+goto :finished
+
+:models_failed
+echo  [warn] not all models could be downloaded.
+echo         they are downloaded automatically on the first start, or later
+echo         on with the "DOWNLOAD MODELS" button inside the app.
+goto :finished
+
+:models_skipped
+echo  [warn] the models are downloaded automatically on the first start.
+echo         you can also use the "DOWNLOAD MODELS" button inside the app.
+goto :finished
+
+:deps_error
+echo.
+echo  [ERROR] the python packages could not be installed.
+echo          check the internet connection and run this script again.
+echo.
+pause
+exit /b 1
+
+:no_pip
+echo.
+echo  [ERROR] pip is not available in the environment "%ENV_NAME%".
+echo.
+pause
+exit /b 1
+
+:no_env
+echo.
+echo  [ERROR] the conda environment "%ENV_NAME%" could not be activated.
+echo.
+pause
+exit /b 1
+
+:finished
 echo.
 echo  Done.
 echo.

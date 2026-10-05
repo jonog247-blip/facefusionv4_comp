@@ -41,7 +41,7 @@ CACHED_PRESET : Dict[str, Any] = {}
 
 
 def apply_startup_preset() -> None:
-	hardware_profile = hardware.detect_hardware_profile(refresh = True)
+	hardware_profile = hardware.detect_hardware_profile()
 	preset_mode = hardware.resolve_preset_mode(state_manager.get_item('hardware_preset_mode'))
 	hardware_preset = hardware.create_hardware_preset(hardware_profile, preset_mode)
 

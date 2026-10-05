@@ -1,6 +1,7 @@
 import os
 import subprocess
 from functools import lru_cache
+from types import ModuleType
 from typing import List, Optional, Tuple
 from urllib.parse import urlparse
 
@@ -96,6 +97,9 @@ def conditional_download_hashes(hash_set : DownloadSet) -> bool:
 		invalid_hash_file_name = get_file_name(invalid_hash_path)
 		logger.error(translator.get('validating_hash_failed').format(hash_file_name = invalid_hash_file_name), __name__)
 
+	if invalid_hash_paths:
+		logger.error(translator.get('download_model_failed'), __name__)
+
 	if not invalid_hash_paths:
 		process_manager.end()
 	return not invalid_hash_paths
@@ -126,9 +130,38 @@ def conditional_download_sources(source_set : DownloadSet) -> bool:
 		if remove_file(invalid_source_path):
 			logger.error(translator.get('deleting_corrupt_source').format(source_file_name = invalid_source_file_name), __name__)
 
+	if invalid_source_paths:
+		logger.error(translator.get('download_model_failed'), __name__)
+
 	if not invalid_source_paths:
 		process_manager.end()
 	return not invalid_source_paths
+
+
+def get_model_source_set(module : ModuleType) -> DownloadSet:
+	if hasattr(module, 'get_model_options'):
+		model_options = module.get_model_options()
+
+		if isinstance(model_options, dict) and model_options.get('sources'):
+			return model_options.get('sources')
+
+	if hasattr(module, 'collect_model_downloads'):
+		_, model_source_set = module.collect_model_downloads()
+		return model_source_set
+
+	return {}
+
+
+def find_missing_source_paths(source_set : DownloadSet) -> List[str]:
+	missing_source_paths = []
+
+	for source_key in source_set:
+		source_path = source_set.get(source_key).get('path')
+
+		if source_path and not is_file(source_path):
+			missing_source_paths.append(source_path)
+
+	return missing_source_paths
 
 
 def validate_hash_paths(hash_paths : List[str]) -> Tuple[List[str], List[str]]:

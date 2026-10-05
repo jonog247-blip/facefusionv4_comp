@@ -580,6 +580,43 @@
 }
 
 /*
+	Model downloads
+*/
+
+:root:root:root:root .ff-hint
+{
+	color: var(--ff-text-faded);
+	font-size: 0.78rem;
+	line-height: 1.6;
+	margin: 0.15rem 0 0.35rem 0;
+}
+
+:root:root:root:root .ff-action
+{
+	background: linear-gradient(135deg, var(--ff-accent), var(--ff-indigo)) !important;
+	border: 0 !important;
+	border-radius: 999px !important;
+	box-shadow: 0 10px 24px rgba(10, 132, 255, 0.28);
+	color: #ffffff !important;
+	font-size: 0.84rem !important;
+	font-weight: 620 !important;
+	letter-spacing: 0.03em;
+	min-height: 2.4rem;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+:root:root:root:root .ff-action:hover
+{
+	box-shadow: 0 14px 30px rgba(10, 132, 255, 0.38);
+	transform: translateY(-1px);
+}
+
+:root:root:root:root .ff-action:active
+{
+	transform: translateY(0);
+}
+
+/*
 	Responsive
 */
 

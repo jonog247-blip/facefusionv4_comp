@@ -32,9 +32,22 @@ windows_launch.bat    # starts the Studio interface and opens the browser
 4. detects the NVIDIA driver and installs the CUDA 12.9.1 runtime and cuDNN 9.10.0 through the nvidia conda channel, with the pip wheels as a fallback, so no CUDA Toolkit installation is required
 5. installs the Python libraries through `python install.py cuda@12` (`python install.py default` on machines without a NVIDIA GPU)
 6. runs a self test that prints the available inference providers
-7. offers to download all models
+7. offers to download the models for the detected hardware (recommended, default answer `Y`)
 
 `windows_launch.bat` activates the environment, starts the app on <http://127.0.0.1:7860> and opens the browser. Arguments are passed through, for example `windows_launch.bat --execution-providers cpu`.
+
+
+Models
+------
+
+Models are downloaded on demand, a full download is never required:
+
+- on the first start the app downloads the models of the detected hardware preset (face detector, face landmarker, face recogniser, face masker, voice extractor and the configured face swapper)
+- `python facefusion.py download-models` downloads exactly those models and exits, `--processors face_swapper face_enhancer` extends the selection
+- the `DOWNLOAD MODELS` button in the `PERFORMANCE & DOWNLOADS` section downloads the models of every processor
+- `python facefusion.py force-download` does the same on the command line
+
+The models live in `.assets/models` next to `facefusion.py` and are validated by a hash on every start. Missing files are re-downloaded automatically, corrupt files are deleted and downloaded again.
 
 
 Studio UI
@@ -59,9 +72,40 @@ The presets can be selected in the UI:
 | Maximum speed | smallest models and JPEG temp frames |
 | Low VRAM | reduces memory usage aggressively |
 
+The preset is applied before the models are checked, so the models of the recommended settings are downloaded on the first start. Settings that are written into `facefusion.ini` are respected, the preset only fills in the settings that are left empty - remove a value from `facefusion.ini` to let the preset decide again.
+
 The classic layouts stay available with `--ui-layouts default`, `jobs`, `webcam` and `benchmark`.
 
 The NSFW content filter is disabled by default, it can be enabled again with the checkbox in the hardware panel or with `--content-analyser-enabled`.
+
+
+Troubleshooting
+---------------
+
+`AttributeError: 'NoneType' object has no attribute 'get_inputs'`
+
+A model that the selected processor needs is not downloaded. The terminal now prints the file name, for example:
+
+```
+[FACEFUSION.INFERENCE_MANAGER] model hyperswap_1a_256.onnx is not downloaded - download the models and try again
+```
+
+Click `DOWNLOAD MODELS` in the `PERFORMANCE & DOWNLOADS` section, or run one of these commands inside the activated environment:
+
+```
+python facefusion.py download-models
+python facefusion.py force-download
+```
+
+If the download fails, check the internet connection, the antivirus or a firewall that blocks `github.com` and `huggingface.co`.
+
+`the models could not be downloaded - check the internet connection and download again`
+
+At least one model file could not be validated or downloaded. Run the download again, the app deletes incomplete files and retries automatically.
+
+The app does not start and reports `CUDAExecutionProvider is not available`
+
+The CUDA runtime or cuDNN could not be installed. Run `windows_install.bat` again on a machine with the latest NVIDIA driver, or run the app on the CPU with `windows_launch.bat --execution-providers cpu`.
 
 
 Installation
