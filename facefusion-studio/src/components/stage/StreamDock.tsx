@@ -91,6 +91,7 @@ export const StreamDock = () => {
 		let cancelled = false;
 		let raf = 0;
 		let last = 0;
+		let inFlight = false;
 
 		const tick = async (time: number) => {
 			if (cancelled) {
@@ -99,7 +100,8 @@ export const StreamDock = () => {
 
 			raf = requestAnimationFrame(tick);
 
-			if (time - last < 90) {
+			// The landmarker takes longer than a frame; never queue detections.
+			if (time - last < 90 || inFlight) {
 				return;
 			}
 			last = time;
@@ -110,7 +112,13 @@ export const StreamDock = () => {
 				return;
 			}
 
+			inFlight = true;
 			const observation = await observeVideoFrame(video);
+			inFlight = false;
+
+			if (cancelled) {
+				return;
+			}
 
 			if (observation) {
 				reportTargetPose(observation.pose);
