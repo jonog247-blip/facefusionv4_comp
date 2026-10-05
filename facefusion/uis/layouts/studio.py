@@ -1,7 +1,9 @@
 import gradio
 
 from facefusion import hardware, metadata, state_manager, translator
-from facefusion.uis.components import about, age_modifier_options, background_remover_options, deep_swapper_options, download, execution, execution_thread_count, expression_restorer_options, face_debugger_options, face_detector, face_editor_options, face_enhancer_options, face_landmarker, face_masker, face_selector, face_swapper_options, face_tracker, frame_colorizer_options, frame_enhancer_options, hardware as hardware_component, instant_runner, job_list, job_list_options, job_manager, job_runner, lip_syncer_options, memory, output, output_options, preview, preview_options, processors, source, target, temp_frame, terminal, trim_frame, ui_workflow, voice_extractor, workflow
+from facefusion.processors.core import load_processor_module
+from facefusion.uis import logo
+from facefusion.uis.components import about, age_modifier_options, background_remover_options, deep_swapper_options, download, execution, execution_thread_count, expression_restorer_options, face_debugger_options, face_detector, face_editor_options, face_enhancer_options, face_landmarker, face_masker, face_selector, face_swapper_options, face_tracker, frame_colorizer_options, frame_enhancer_options, hardware as hardware_component, instant_runner, job_list, job_list_options, job_manager, job_runner, lip_syncer_options, memory, output, output_options, preview, preview_options, processors, rtx_upscaler_options, source, target, temp_frame, terminal, trim_frame, ui_workflow, voice_extractor, workflow
 
 
 def pre_check() -> bool:
@@ -21,7 +23,7 @@ def create_hero() -> str:
 		chip_text = str(gpu.get('name'))
 
 		if gpu.get('vram_total_gb'):
-			chip_text += ' · ' + str(gpu.get('vram_total_gb')) + ' GB'
+			chip_text += ' · ' + str(gpu.get('vram_total_gb')) + ' GB VRAM'
 		chips.append((chip_text, 'is-good'))
 	else:
 		chips.append(('CPU inference', 'is-warn'))
@@ -34,21 +36,39 @@ def create_hero() -> str:
 	if 'h264_nvenc' in (hardware_profile.get('video_encoders') or []):
 		chips.append(('NVENC', 'is-accent'))
 
+	if is_rtx_upscaler_ready():
+		chips.append(('RTX super resolution', 'is-accent'))
+	elif 'rtx_upscaler' in (state_manager.get_item('processors') or []):
+		chips.append(('RTX super resolution unavailable', 'is-warn'))
+
 	if state_manager.get_item('content_analyser_enabled'):
 		chips.append(('NSFW filter on', 'is-warn'))
 	else:
 		chips.append(('NSFW filter off', 'is-accent'))
 
 	chip_html = ''.join([ '<span class="ff-chip ' + chip_class + '">' + chip_text + '</span>' for chip_text, chip_class in chips ])
-	subtitle = hardware.TIER_LABELS.get(hardware_preset.get('tier'), 'Custom') + ' profile · ' + hardware.HARDWARE_PRESET_MODE_LABELS.get(preset_mode, preset_mode)
+	preset_label = hardware.TIER_LABELS.get(hardware_preset.get('tier'), 'Custom') + ' · ' + hardware.HARDWARE_PRESET_MODE_LABELS.get(preset_mode, preset_mode)
 	return\
 	(
 		'<div class="ff-hero">'
-		'<div class="ff-hero-title"><span class="ff-logo">🎭</span><span>' + metadata.get('name') + ' Studio'
-		'<span class="ff-hero-subtitle">' + metadata.get('version') + ' · ' + subtitle + '</span></span></div>'
+		'<div class="ff-hero-identity">' + logo.get_logo_markup() +
+		'<div class="ff-hero-heading">'
+		'<div class="ff-hero-title"><span class="ff-hero-name">' + metadata.get('name') + '</span>'
+		'<span class="ff-hero-studio">Studio</span></div>'
+		'<div class="ff-hero-meta"><span class="ff-hero-badge">v' + metadata.get('version') + '</span>'
+		'<span class="ff-hero-profile">' + preset_label + '</span></div>'
+		'</div></div>'
 		'<div class="ff-hero-chips">' + chip_html + '</div>'
 		'</div>'
 	)
+
+
+def is_rtx_upscaler_ready() -> bool:
+	try:
+		rtx_upscaler_module = load_processor_module('rtx_upscaler')
+		return bool(rtx_upscaler_module.is_rtx_upscaler_available())
+	except Exception:
+		return False
 
 
 def render() -> gradio.Blocks:
@@ -84,6 +104,7 @@ def render() -> gradio.Blocks:
 						face_swapper_options.render()
 						frame_colorizer_options.render()
 						frame_enhancer_options.render()
+						rtx_upscaler_options.render()
 						lip_syncer_options.render()
 						voice_extractor.render()
 				with gradio.Accordion(translator.get('uis.section_faces'), open = False, elem_classes = [ 'ff-section' ]):
@@ -150,6 +171,7 @@ def listen() -> None:
 	face_tracker.listen()
 	frame_colorizer_options.listen()
 	frame_enhancer_options.listen()
+	rtx_upscaler_options.listen()
 	lip_syncer_options.listen()
 	voice_extractor.listen()
 	execution.listen()

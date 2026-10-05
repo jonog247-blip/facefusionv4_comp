@@ -192,13 +192,75 @@ if errorlevel 1 goto :deps_error
 python -c "import onnxruntime, sys; sys.exit(0 if 'CUDAExecutionProvider' in onnxruntime.get_available_providers() else 1)" >nul 2>nul
 if errorlevel 1 goto :no_cuda
 echo  [ok]   CUDA inference is ready
-goto :write_env
+goto :rtx_setup
 
 :no_cuda
 if "%HAS_NVIDIA%"=="1" (
 	echo  [warn] CUDAExecutionProvider is not available.
 	echo         update to the latest NVIDIA driver and run this script again.
 )
+
+:rtx_setup
+if "%HAS_NVIDIA%"=="0" goto :write_env
+
+set "DRV_MAJOR="
+for /f "tokens=1 delims=." %%A in ('nvidia-smi --query-gpu=driver_version --format^=csv^,noheader 2^>nul') do set "DRV_MAJOR=%%A"
+if defined DRV_MAJOR if %DRV_MAJOR% LSS 570 (
+	echo  [warn] the NVIDIA driver is older than 570.65 - the RTX super resolution needs a newer driver.
+)
+
+echo.
+echo  ----------------------------------------------------------------
+echo    RTX super resolution (optional)
+echo    upscales images and videos with the AI models of the RTX
+echo    graphics card, needs an NVIDIA RTX card with Tensor Cores
+echo ----------------------------------------------------------------
+set "INSTALL_RTX="
+set /p "INSTALL_RTX=Install the RTX super resolution support now [Y/n]: "
+if /i "%INSTALL_RTX%"=="n" goto :rtx_skipped
+if /i "%INSTALL_RTX%"=="no" goto :rtx_skipped
+
+echo  [..]   installing the nvidia-vfx bindings ...
+python -m pip install wheel-stub
+python -m pip install nvidia-vfx --index-url https://pypi.nvidia.com --no-build-isolation
+if errorlevel 1 (
+	echo  [warn] retrying with the standard package index ...
+	python -m pip install nvidia-vfx --extra-index-url https://pypi.nvidia.com --no-build-isolation --prefer-binary
+)
+if errorlevel 1 goto :rtx_failed
+
+python -c "import torch" >nul 2>nul
+if errorlevel 1 (
+	echo  [..]   installing cupy for the GPU memory exchange ...
+	python -m pip install cupy-cuda12x
+	if errorlevel 1 goto :rtx_failed
+)
+
+python -c "import nvvfx" >nul 2>nul
+if errorlevel 1 goto :rtx_warn
+echo  [ok]   RTX super resolution is ready
+goto :write_env
+
+:rtx_warn
+echo  [warn] nvidia-vfx was installed but cannot load on this system.
+echo         the RTX upscaler stays unavailable, everything else works.
+goto :write_env
+
+:rtx_failed
+echo  [warn] the RTX super resolution support could not be installed.
+echo         everything else works, the upscaler is not offered in the app.
+echo         install it later with:
+echo           python -m pip install wheel-stub
+echo           python -m pip install nvidia-vfx --index-url https://pypi.nvidia.com --no-build-isolation
+echo           python -m pip install cupy-cuda12x
+goto :write_env
+
+:rtx_skipped
+echo  [warn] the RTX super resolution support is not installed.
+echo         it can be added later with:
+echo           python -m pip install wheel-stub
+echo           python -m pip install nvidia-vfx --index-url https://pypi.nvidia.com --no-build-isolation
+echo           python -m pip install cupy-cuda12x
 
 :write_env
 echo.
