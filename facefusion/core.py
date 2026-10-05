@@ -5,7 +5,7 @@ import signal
 import sys
 from time import time
 
-from facefusion import benchmarker, cli_helper, content_analyser, hash_helper, logger, state_manager, translator
+from facefusion import benchmarker, cli_helper, content_analyser, hardware, hash_helper, logger, state_manager, translator
 from facefusion.args import apply_args, collect_job_args, reduce_job_args, reduce_step_args
 from facefusion.download import conditional_download_hashes, conditional_download_sources
 from facefusion.exit_helper import hard_exit, signal_exit
@@ -42,6 +42,10 @@ def cli() -> None:
 def route(args : Args) -> None:
 	if state_manager.get_item('command') == 'force-download':
 		error_code = force_download()
+		hard_exit(error_code)
+
+	if state_manager.get_item('command') == 'hardware-info':
+		error_code = print_hardware_info()
 		hard_exit(error_code)
 
 	if state_manager.get_item('command') == 'benchmark':
@@ -85,6 +89,14 @@ def route(args : Args) -> None:
 		hard_exit(error_code)
 
 
+def print_hardware_info() -> ErrorCode:
+	profile = hardware.detect_hardware_profile(refresh = True)
+	preset_mode = hardware.resolve_preset_mode(state_manager.get_item('hardware_preset_mode'))
+	preset = hardware.create_hardware_preset(profile, preset_mode)
+	logger.info(hardware.format_hardware_report(profile, preset, plain = True), __name__)
+	return 0
+
+
 def pre_check() -> bool:
 	if sys.version_info < (3, 10):
 		logger.error(translator.get('python_not_supported').format(version = '3.10'), __name__)
@@ -98,9 +110,15 @@ def pre_check() -> bool:
 
 
 def common_pre_check() -> bool:
+	if not content_analyser.is_content_analyser_enabled():
+		return True
+
 	content_analyser_content = inspect.getsource(content_analyser).encode()
 
-	return hash_helper.create_hash(content_analyser_content) == '068a6158'
+	if hash_helper.create_hash(content_analyser_content) != '937aab15':
+		logger.error(translator.get('content_analyser_modified'), __name__)
+		return False
+	return True
 
 
 def processors_pre_check() -> bool:
@@ -122,6 +140,8 @@ def force_download() -> ErrorCode:
 				common_modules.append(common_module)
 
 	for module in common_modules + processor_modules:
+		if module is content_analyser and not content_analyser.is_content_analyser_enabled():
+			continue
 		if hasattr(module, 'create_static_model_set'):
 			for model in module.create_static_model_set(download_scope).values():
 				model_hash_set = model.get('hashes')

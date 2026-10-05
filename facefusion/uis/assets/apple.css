@@ -1,0 +1,605 @@
+/*
+	FaceFusion Studio - Apple inspired dark surface
+	Loaded after overrides.css, the :root:root:root:root prefix raises the specificity above the gradio defaults.
+*/
+
+:root, .dark
+{
+	--ff-accent: #0a84ff;
+	--ff-accent-soft: rgba(10, 132, 255, 0.16);
+	--ff-indigo: #5e5ce6;
+	--ff-violet: #bf5af2;
+	--ff-green: #30d158;
+	--ff-orange: #ff9f0a;
+	--ff-red: #ff453a;
+	--ff-surface: #1c1c1e;
+	--ff-surface-raised: #232325;
+	--ff-surface-sunken: #141416;
+	--ff-hairline: rgba(255, 255, 255, 0.07);
+	--ff-hairline-strong: rgba(255, 255, 255, 0.14);
+	--ff-text: #f5f5f7;
+	--ff-text-subdued: #a1a1a6;
+	--ff-text-faded: #8e8e93;
+	--ff-shadow: 0 18px 45px rgba(0, 0, 0, 0.55);
+	--ff-radius: 1.15rem;
+	--ff-radius-small: 0.75rem;
+}
+
+:root:root:root:root body,
+:root:root:root:root .gradio-container
+{
+	background: radial-gradient(120% 80% at 15% -10%, rgba(10, 132, 255, 0.16), transparent 55%), radial-gradient(90% 70% at 100% 0%, rgba(94, 92, 230, 0.14), transparent 45%), #000000;
+	background-attachment: fixed;
+	color: var(--ff-text);
+	font-feature-settings: 'cv02', 'cv03', 'cv04', 'ss01';
+	-webkit-font-smoothing: antialiased;
+}
+
+:root:root:root:root main
+{
+	max-width: 118em;
+	padding: 0.75rem 0.75rem 2rem 0.75rem;
+}
+
+:root:root:root:root .gradio-container .prose :is(h1, h2, h3)
+{
+	letter-spacing: -0.01em;
+}
+
+/*
+	Hero
+*/
+
+:root:root:root:root .ff-hero
+{
+	align-items: center;
+	background: linear-gradient(135deg, rgba(28, 28, 30, 0.92), rgba(28, 28, 30, 0.62));
+	border: 1px solid var(--ff-hairline);
+	border-radius: var(--ff-radius);
+	box-shadow: var(--ff-shadow);
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+	justify-content: space-between;
+	margin-bottom: 0.85rem;
+	padding: 1.35rem 1.6rem;
+	backdrop-filter: blur(18px);
+}
+
+:root:root:root:root .ff-hero-title
+{
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	font-size: 1.85rem;
+	font-weight: 700;
+	gap: 0.75rem;
+	letter-spacing: -0.02em;
+}
+
+:root:root:root:root .ff-hero-title > span:first-child
+{
+	filter: drop-shadow(0 6px 12px rgba(10, 132, 255, 0.45));
+	font-size: 1.6rem;
+}
+
+:root:root:root:root .ff-hero-subtitle
+{
+	-webkit-background-clip: text;
+	background-clip: text;
+	background-image: linear-gradient(90deg, var(--ff-accent), var(--ff-violet));
+	color: transparent;
+	font-size: 0.82rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	margin-left: 0.35rem;
+	text-transform: none;
+	white-space: nowrap;
+	padding-left: 0.65rem;
+	border-left: 1px solid var(--ff-hairline-strong);
+}
+
+:root:root:root:root .ff-hero-chips
+{
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+:root:root:root:root .ff-chip
+{
+	align-items: center;
+	background: rgba(120, 120, 128, 0.22);
+	border: 1px solid var(--ff-hairline);
+	border-radius: 999px;
+	color: var(--ff-text-subdued);
+	display: inline-flex;
+	font-size: 0.72rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	padding: 0.35rem 0.75rem;
+	white-space: nowrap;
+}
+
+:root:root:root:root .ff-chip.is-accent
+{
+	background: var(--ff-accent-soft);
+	border-color: rgba(10, 132, 255, 0.35);
+	color: #9ecbff;
+}
+
+:root:root:root:root .ff-chip.is-good
+{
+	background: rgba(48, 209, 88, 0.14);
+	border-color: rgba(48, 209, 88, 0.32);
+	color: #8ceaa6;
+}
+
+:root:root:root:root .ff-chip.is-warn
+{
+	background: rgba(255, 159, 10, 0.14);
+	border-color: rgba(255, 159, 10, 0.32);
+	color: #ffcd7a;
+}
+
+/*
+	Sections
+*/
+
+:root:root:root:root .ff-section
+{
+	background: linear-gradient(180deg, rgba(28, 28, 30, 0.94), rgba(20, 20, 22, 0.94));
+	border: 1px solid var(--ff-hairline);
+	border-radius: var(--ff-radius);
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+	margin-bottom: 0.85rem;
+	overflow: hidden;
+	transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+:root:root:root:root .ff-section:hover
+{
+	border-color: var(--ff-hairline-strong);
+}
+
+:root:root:root:root .ff-section > .label-wrap
+{
+	align-items: center;
+	background: rgba(255, 255, 255, 0.02);
+	gap: 0.5rem;
+	padding: 0.85rem 1rem;
+}
+
+:root:root:root:root .ff-section > .label-wrap > span
+{
+	color: var(--ff-text);
+	font-size: 0.82rem;
+	font-weight: 650;
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+}
+
+:root:root:root:root .ff-section > .label-wrap .icon
+{
+	color: var(--ff-text-faded);
+	transition: transform 180ms ease;
+}
+
+:root:root:root:root .ff-section .label-wrap.open .icon,
+:root:root:root:root .ff-section .label-wrap[aria-expanded='true'] .icon
+{
+	transform: rotate(90deg);
+}
+
+:root:root:root:root .ff-panel
+{
+	display: flex;
+	flex-direction: column;
+	gap: 0.6rem;
+	padding: 0.85rem 1rem 1rem 1rem;
+}
+
+:root:root:root:root .ff-panel + .ff-panel
+{
+	padding-top: 0;
+}
+
+:root:root:root:root .ff-sticky
+{
+	align-self: flex-start;
+	position: sticky;
+	top: 0.75rem;
+}
+
+:root:root:root:root .ff-sticky .ff-section:last-child
+{
+	margin-bottom: 0;
+}
+
+/*
+	Controls
+*/
+
+:root:root:root:root .block .label-wrap > span,
+:root:root:root:root .block > label > span,
+:root:root:root:root .block .head > .title
+{
+	color: var(--ff-text-faded);
+	letter-spacing: 0.07em;
+	text-transform: uppercase;
+}
+
+:root:root:root:root :is(input[type='text'], input[type='number'], textarea, .wrap-inner, .secondary-wrap > input)
+{
+	background: var(--ff-surface-raised) !important;
+	border: 1px solid var(--ff-hairline) !important;
+	border-radius: var(--ff-radius-small) !important;
+	color: var(--ff-text) !important;
+	box-shadow: none !important;
+}
+
+:root:root:root:root input:focus-visible,
+:root:root:root:root textarea:focus-visible,
+:root:root:root:root .wrap-inner:focus-within
+{
+	border-color: rgba(10, 132, 255, 0.7) !important;
+	box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.22) !important;
+	outline: none !important;
+}
+
+:root:root:root:root .wrap-inner .icon-wrap,
+:root:root:root:root .secondary-wrap
+{
+	color: var(--ff-text-faded);
+}
+
+:root:root:root:root .token
+{
+	background: rgba(120, 120, 128, 0.24);
+	border-radius: 999px;
+	color: var(--ff-text);
+	font-weight: 550;
+}
+
+:root:root:root:root .dropdown-arrow,
+:root:root:root:root .secondary-wrap::after
+{
+	color: var(--ff-text-faded);
+}
+
+:root:root:root:root button.primary,
+:root:root:root:root .ff-primary > button,
+:root:root:root:root button.lg.primary
+{
+	background-image: linear-gradient(180deg, #329bff, #0a6ee0);
+	border: none;
+	border-radius: 999px;
+	box-shadow: 0 8px 20px rgba(10, 132, 255, 0.32);
+	color: #ffffff;
+	font-weight: 650;
+	letter-spacing: 0.015em;
+	transition: transform 120ms ease, box-shadow 160ms ease, filter 160ms ease;
+}
+
+:root:root:root:root button.primary:hover,
+:root:root:root:root .ff-primary > button:hover
+{
+	box-shadow: 0 10px 26px rgba(10, 132, 255, 0.42);
+	filter: brightness(1.05);
+}
+
+:root:root:root:root button.primary:active,
+:root:root:root:root .ff-primary > button:active
+{
+	transform: translateY(1px) scale(0.995);
+}
+
+:root:root:root:root button.secondary,
+:root:root:root:root button.sm.secondary,
+:root:root:root:root button.lg.secondary
+{
+	background: rgba(120, 120, 128, 0.2);
+	border: 1px solid var(--ff-hairline);
+	border-radius: 999px;
+	color: var(--ff-text);
+	font-weight: 600;
+	transition: background 140ms ease, border-color 140ms ease;
+}
+
+:root:root:root:root button.secondary:hover
+{
+	background: rgba(120, 120, 128, 0.3);
+	border-color: var(--ff-hairline-strong);
+}
+
+:root:root:root:root .icon-button
+{
+	background: rgba(120, 120, 128, 0.2);
+	border-radius: 999px;
+	color: var(--ff-text-subdued);
+}
+
+:root:root:root:root .icon-button:hover
+{
+	background: rgba(120, 120, 128, 0.3);
+	color: var(--ff-text);
+}
+
+:root:root:root:root .ff-panel .wrap:has(label input[type='checkbox']),
+:root:root:root:root .ff-panel .wrap:has(label input[type='radio'])
+{
+	gap: 0.4rem;
+}
+
+:root:root:root:root .ff-panel label > input[type='checkbox'],
+:root:root:root:root .ff-panel label > input[type='radio']
+{
+	margin-right: 0.45rem;
+}
+
+:root:root:root:root .ff-panel .wrap > label,
+:root:root:root:root .ff-panel .wrap > .item
+{
+	background: rgba(120, 120, 128, 0.14);
+	border: 1px solid transparent;
+	border-radius: 0.65rem;
+	color: var(--ff-text-subdued);
+	font-size: 0.78rem;
+	font-weight: 550;
+	letter-spacing: 0.01em;
+	padding: 0.3rem 0.7rem;
+	transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+:root:root:root:root .ff-panel .wrap > label:hover,
+:root:root:root:root .ff-panel .wrap > .item:hover
+{
+	background: rgba(120, 120, 128, 0.24);
+	color: var(--ff-text);
+}
+
+:root:root:root:root .ff-panel .wrap > label.selected,
+:root:root:root:root .ff-panel .wrap > label:has(input:checked)
+{
+	background: var(--ff-accent-soft);
+	border-color: rgba(10, 132, 255, 0.45);
+	color: #d0e7ff;
+}
+
+:root:root:root:root input[type='range']
+{
+	accent-color: var(--ff-accent);
+}
+
+:root:root:root:root input[type='range']::-webkit-slider-runnable-track
+{
+	background: rgba(120, 120, 128, 0.32);
+	border-radius: 999px;
+	height: 0.35rem;
+}
+
+:root:root:root:root input[type='range']::-webkit-slider-thumb
+{
+	background: #ffffff;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+	margin-top: -0.3rem;
+}
+
+:root:root:root:root input[type='range']::-moz-range-track
+{
+	background: rgba(120, 120, 128, 0.32);
+	border-radius: 999px;
+	height: 0.35rem;
+}
+
+:root:root:root:root .slider_input_container input[type='number']
+{
+	background: transparent !important;
+	border: none !important;
+	color: var(--ff-text-subdued) !important;
+	font-variant-numeric: tabular-nums;
+}
+
+/*
+	Media & panels
+*/
+
+:root:root:root:root .image-frame
+{
+	background-color: #0d0d0f;
+	background-image: conic-gradient(#232325 90deg, #161618 90deg 180deg, #232325 180deg 270deg, #161618 270deg);
+	background-repeat: repeat;
+	background-size: 1.25rem 1.25rem;
+	border: 1px solid var(--ff-hairline);
+	border-radius: var(--ff-radius);
+	overflow: hidden;
+}
+
+:root:root:root:root .gallery-container .thumbnail-item,
+:root:root:root:root .gallery-container .thumbnail-lg
+{
+	border: 1px solid transparent;
+	border-radius: 0.65rem;
+	overflow: hidden;
+	transition: border-color 140ms ease;
+}
+
+:root:root:root:root .gallery-container .thumbnail-item.selected
+{
+	border-color: var(--ff-accent);
+	box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.35);
+}
+
+:root:root:root:root .ff-terminal textarea,
+:root:root:root:root textarea[data-testid='textbox']
+{
+	background: #0a0a0c !important;
+	border: 1px solid var(--ff-hairline) !important;
+	border-radius: var(--ff-radius-small) !important;
+	color: #e5e5ea !important;
+	font-family: 'SF Mono', ui-monospace, 'JetBrains Mono', 'Cascadia Code', Consolas, monospace !important;
+	font-size: 0.78rem !important;
+	line-height: 1.55 !important;
+}
+
+:root:root:root:root .ff-note,
+:root:root:root:root .ff-markdown
+{
+	color: var(--ff-text-subdued);
+	font-size: 0.86rem;
+	line-height: 1.7;
+}
+
+:root:root:root:root .ff-card
+{
+	background: rgba(120, 120, 128, 0.12);
+	border: 1px solid var(--ff-hairline);
+	border-radius: var(--ff-radius-small);
+	padding: 0.85rem 1rem;
+}
+
+:root:root:root:root .ff-card code
+{
+	background: rgba(10, 132, 255, 0.18);
+	border-radius: 0.4rem;
+	color: #9ecbff;
+	font-size: 0.78rem;
+	padding: 0.1rem 0.35rem;
+}
+
+:root:root:root:root .ff-card strong
+{
+	color: var(--ff-text);
+	font-weight: 650;
+}
+
+:root:root:root:root table
+{
+	border: 1px solid var(--ff-hairline);
+	border-radius: var(--ff-radius-small);
+	overflow: hidden;
+}
+
+:root:root:root:root table th
+{
+	background: rgba(120, 120, 128, 0.16);
+	color: var(--ff-text-subdued);
+	font-size: 0.72rem;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+:root:root:root:root table td
+{
+	color: var(--ff-text-subdued);
+	font-size: 0.82rem;
+}
+
+/*
+	Progress & status
+*/
+
+:root:root:root:root .progress-bar
+{
+	background: rgba(120, 120, 128, 0.2);
+	border-radius: 999px;
+	overflow: hidden;
+}
+
+:root:root:root:root .progress-bar > .progress-level-inner,
+:root:root:root:root .progress-bar > div
+{
+	background-image: linear-gradient(90deg, var(--ff-accent), var(--ff-violet));
+	border-radius: 999px;
+}
+
+:root:root:root:root .ff-section .wrap .empty
+{
+	color: var(--ff-text-faded);
+	font-size: 0.82rem;
+}
+
+/*
+	Tabs & shell
+*/
+
+:root:root:root:root .tabs > .tab-nav,
+:root:root:root:root .tab-wrapper > .tab-container
+{
+	background: rgba(120, 120, 128, 0.14);
+	border-radius: 999px;
+	gap: 0.25rem;
+	padding: 0.25rem;
+}
+
+:root:root:root:root .tabs > .tab-nav > button,
+:root:root:root:root .tab-container button
+{
+	background: transparent;
+	border: none;
+	border-radius: 999px;
+	color: var(--ff-text-subdued);
+	font-size: 0.8rem;
+	font-weight: 600;
+	padding: 0.4rem 0.9rem;
+	transition: background 140ms ease, color 140ms ease;
+}
+
+:root:root:root:root .tabs > .tab-nav > button.selected,
+:root:root:root:root .tab-container button.selected
+{
+	background: rgba(255, 255, 255, 0.12);
+	color: var(--ff-text);
+}
+
+:root:root:root:root footer
+{
+	display: none;
+}
+
+:root:root:root:root ::-webkit-scrollbar
+{
+	height: 0.6rem;
+	width: 0.6rem;
+}
+
+:root:root:root:root ::-webkit-scrollbar-track
+{
+	background: transparent;
+}
+
+:root:root:root:root ::-webkit-scrollbar-thumb
+{
+	background: rgba(120, 120, 128, 0.4);
+	border-radius: 999px;
+}
+
+:root:root:root:root ::-webkit-scrollbar-thumb:hover
+{
+	background: rgba(120, 120, 128, 0.6);
+}
+
+/*
+	Responsive
+*/
+
+@media (max-width: 1280px)
+{
+	:root:root:root:root .ff-sticky
+	{
+		position: static;
+	}
+}
+
+@media (max-width: 860px)
+{
+	:root:root:root:root .ff-hero
+	{
+		padding: 1rem 1.1rem;
+	}
+
+	:root:root:root:root .ff-hero-title
+	{
+		font-size: 1.4rem;
+	}
+}

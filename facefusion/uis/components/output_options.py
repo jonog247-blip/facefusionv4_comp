@@ -113,6 +113,10 @@ def render() -> None:
 		maximum = 60,
 		visible = is_video(state_manager.get_item('target_path'))
 	)
+	register_ui_component('output_image_quality_slider', OUTPUT_IMAGE_QUALITY_SLIDER)
+	register_ui_component('output_video_encoder_dropdown', OUTPUT_VIDEO_ENCODER_DROPDOWN)
+	register_ui_component('output_video_preset_dropdown', OUTPUT_VIDEO_PRESET_DROPDOWN)
+	register_ui_component('output_video_quality_slider', OUTPUT_VIDEO_QUALITY_SLIDER)
 	register_ui_component('output_video_fps_slider', OUTPUT_VIDEO_FPS_SLIDER)
 
 

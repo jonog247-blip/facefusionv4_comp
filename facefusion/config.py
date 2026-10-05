@@ -1,3 +1,4 @@
+import os
 from configparser import ConfigParser
 from functools import lru_cache
 from typing import List, Optional
@@ -35,6 +36,30 @@ def get_float_value(section : str, option : str, fallback : Optional[str] = None
 	if config_parser.has_option(section, option) and config_parser.get(section, option).strip():
 		return config_parser.getfloat(section, option)
 	return cast_float(fallback)
+
+
+def save_value(section : str, option : str, value : str) -> bool:
+	config_path = state_manager.get_item('config_path')
+	config_parser = ConfigParser()
+
+	if not config_path or not os.path.isfile(config_path):
+		return False
+
+	try:
+		config_parser.read(config_path, encoding = 'utf-8')
+
+		if not config_parser.has_section(section):
+			config_parser.add_section(section)
+		config_parser.set(section, option, value)
+
+		temp_config_path = config_path + '.tmp'
+
+		with open(temp_config_path, 'w', encoding = 'utf-8') as config_file:
+			config_parser.write(config_file)
+		os.replace(temp_config_path, config_path)
+		return True
+	except (OSError, ValueError):
+		return False
 
 
 def get_bool_value(section : str, option : str, fallback : Optional[str] = None) -> Optional[bool]:

@@ -290,6 +290,22 @@ def create_halt_on_error_program() -> ArgumentParser:
 	return program
 
 
+def create_hardware_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_hardware = program.add_argument_group('hardware')
+	group_hardware.add_argument('--hardware-auto-preset', help = translator.get('help.hardware_auto_preset'), action = 'store_true', default = config.get_bool_value('hardware', 'hardware_auto_preset', 'True'))
+	group_hardware.add_argument('--hardware-preset-mode', help = translator.get('help.hardware_preset_mode').format(choices = ', '.join(facefusion.choices.hardware_preset_modes)), default = config.get_str_value('hardware', 'hardware_preset_mode', 'auto'), choices = facefusion.choices.hardware_preset_modes)
+	return program
+
+
+def create_content_analyser_program() -> ArgumentParser:
+	program = ArgumentParser(add_help = False)
+	group_content = program.add_argument_group('content')
+	group_content.add_argument('--content-analyser-enabled', help = translator.get('help.content_analyser_enabled'), action = 'store_true', default = config.get_bool_value('content', 'content_analyser_enabled', 'False'))
+	job_store.register_job_keys([ 'content_analyser_enabled' ])
+	return program
+
+
 def create_job_id_program() -> ArgumentParser:
 	program = ArgumentParser(add_help = False)
 	program.add_argument('job_id', help = translator.get('help.job_id'), type = sanitize_job_id)
@@ -321,11 +337,12 @@ def create_program() -> ArgumentParser:
 	program._positionals.title = 'commands'
 	program.add_argument('-v', '--version', version = metadata.get('name') + ' ' + metadata.get('version'), action = 'version')
 	sub_program = program.add_subparsers(dest = 'command')
-	sub_program.add_parser('run', help = translator.get('help.run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), create_uis_program(), create_benchmark_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
-	sub_program.add_parser('headless-run', help = translator.get('help.headless_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
-	sub_program.add_parser('batch-run', help = translator.get('help.batch_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_pattern_program(), create_target_pattern_program(), create_output_pattern_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
-	sub_program.add_parser('force-download', help = translator.get('help.force_download'), parents = [ create_download_providers_program(), create_download_scope_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
-	sub_program.add_parser('benchmark', help = translator.get('help.benchmark'), parents = [ create_temp_path_program(), collect_step_program(), create_benchmark_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('run', help = translator.get('help.run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), create_uis_program(), create_benchmark_program(), collect_job_program(), create_hardware_program(), create_content_analyser_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('headless-run', help = translator.get('help.headless_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), collect_job_program(), create_content_analyser_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('batch-run', help = translator.get('help.batch_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_pattern_program(), create_target_pattern_program(), create_output_pattern_program(), collect_step_program(), collect_job_program(), create_content_analyser_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('force-download', help = translator.get('help.force_download'), parents = [ create_download_providers_program(), create_download_scope_program(), create_log_level_program(), create_content_analyser_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('hardware-info', help = translator.get('help.hardware_info'), parents = [ create_hardware_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('benchmark', help = translator.get('help.benchmark'), parents = [ create_temp_path_program(), collect_step_program(), create_benchmark_program(), collect_job_program(), create_content_analyser_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('job-list', help = translator.get('help.job_list'), parents = [ create_job_status_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('job-create', help = translator.get('help.job_create'), parents = [ create_job_id_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('job-submit', help = translator.get('help.job_submit'), parents = [ create_job_id_program(), create_jobs_path_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)

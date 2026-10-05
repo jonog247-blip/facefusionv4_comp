@@ -282,6 +282,45 @@ DownloadProviderValue = TypedDict('DownloadProviderValue',
 })
 DownloadProviderSet : TypeAlias = Dict[DownloadProvider, DownloadProviderValue]
 DownloadScope = Literal['lite', 'full']
+HardwareCpu = TypedDict('HardwareCpu',
+{
+	'name' : str,
+	'physical_cores' : int,
+	'logical_cores' : int
+})
+HardwareMemory = TypedDict('HardwareMemory',
+{
+	'total_gb' : float,
+	'available_gb' : float
+})
+HardwareGpu = TypedDict('HardwareGpu',
+{
+	'name' : str,
+	'vendor' : str,
+	'driver_version' : str,
+	'cuda_version' : str,
+	'vram_total_gb' : float,
+	'vram_free_gb' : float,
+	'compute_capability' : str
+})
+HardwareProfile = TypedDict('HardwareProfile',
+{
+	'platform' : str,
+	'cpu' : HardwareCpu,
+	'memory' : HardwareMemory,
+	'gpus' : List[HardwareGpu],
+	'execution_providers' : List[ExecutionProvider],
+	'video_encoders' : List[str]
+})
+HardwarePresetMode = Literal['auto', 'quality', 'balanced', 'speed', 'low_vram']
+HardwarePreset = TypedDict('HardwarePreset',
+{
+	'mode' : str,
+	'tier' : str,
+	'settings' : Dict[str, Any],
+	'notes' : List[str]
+})
+
 Download = TypedDict('Download',
 {
 	'url' : str,
@@ -386,6 +425,9 @@ StateKey = Literal\
 	'execution_providers',
 	'execution_thread_count',
 	'video_memory_strategy',
+	'hardware_preset_mode',
+	'hardware_auto_preset',
+	'content_analyser_enabled',
 	'log_level',
 	'halt_on_error',
 	'job_id',
@@ -459,6 +501,9 @@ State = TypedDict('State',
 	'execution_providers' : List[ExecutionProvider],
 	'execution_thread_count' : int,
 	'video_memory_strategy' : VideoMemoryStrategy,
+	'hardware_preset_mode' : HardwarePresetMode,
+	'hardware_auto_preset' : bool,
+	'content_analyser_enabled' : bool,
 	'log_level' : LogLevel,
 	'halt_on_error' : bool,
 	'job_id' : str,

@@ -2,7 +2,7 @@ import logging
 from typing import List, Sequence, get_args
 
 from facefusion.common_helper import create_float_range, create_int_range
-from facefusion.types import Angle, AudioEncoder, AudioFormat, AudioTypeSet, BenchmarkMode, BenchmarkResolution, BenchmarkSet, DownloadProvider, DownloadProviderSet, DownloadScope, EncoderSet, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskArea, FaceMaskAreaSet, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, FaceSelectorRace, Gender, ImageFormat, ImageTypeSet, JobStatus, LogLevel, LogLevelSet, Race, Score, TempFrameFormat, TempPixelFormat, UiWorkflow, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoTypeSet, VoiceExtractorModel, WorkflowMode, WorkflowStrategy
+from facefusion.types import Angle, AudioEncoder, AudioFormat, AudioTypeSet, BenchmarkMode, BenchmarkResolution, BenchmarkSet, DownloadProvider, DownloadProviderSet, DownloadScope, EncoderSet, ExecutionProvider, ExecutionProviderSet, FaceDetectorModel, FaceDetectorSet, FaceLandmarkerModel, FaceMaskArea, FaceMaskAreaSet, FaceMaskRegion, FaceMaskRegionSet, FaceMaskType, FaceOccluderModel, FaceParserModel, FaceSelectorGender, FaceSelectorMode, FaceSelectorOrder, FaceSelectorRace, Gender, HardwarePresetMode, ImageFormat, ImageTypeSet, JobStatus, LogLevel, LogLevelSet, Race, Score, TempFrameFormat, TempPixelFormat, UiWorkflow, VideoEncoder, VideoFormat, VideoMemoryStrategy, VideoPreset, VideoTypeSet, VoiceExtractorModel, WorkflowMode, WorkflowStrategy
 
 face_detector_set : FaceDetectorSet =\
 {
@@ -144,6 +144,7 @@ download_providers : List[DownloadProvider] = list(get_args(DownloadProvider))
 download_scopes : List[DownloadScope] = list(get_args(DownloadScope))
 
 video_memory_strategies : List[VideoMemoryStrategy] = list(get_args(VideoMemoryStrategy))
+hardware_preset_modes : List[HardwarePresetMode] = list(get_args(HardwarePresetMode))
 
 log_level_set : LogLevelSet =\
 {

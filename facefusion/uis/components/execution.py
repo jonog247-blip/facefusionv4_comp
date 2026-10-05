@@ -7,6 +7,7 @@ from facefusion.execution import get_available_execution_providers
 from facefusion.filesystem import get_file_name, resolve_file_paths
 from facefusion.processors.core import get_processors_modules
 from facefusion.types import ExecutionProvider
+from facefusion.uis.core import register_ui_component
 
 EXECUTION_PROVIDERS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
 
@@ -19,6 +20,7 @@ def render() -> None:
 		choices = get_available_execution_providers(),
 		value = state_manager.get_item('execution_providers')
 	)
+	register_ui_component('execution_providers_checkbox_group', EXECUTION_PROVIDERS_CHECKBOX_GROUP)
 
 
 def listen() -> None:

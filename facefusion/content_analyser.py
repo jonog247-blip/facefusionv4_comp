@@ -140,13 +140,23 @@ def collect_model_downloads() -> Tuple[DownloadSet, DownloadSet]:
 
 
 def pre_check() -> bool:
+	if not is_content_analyser_enabled():
+		return True
+
 	model_hash_set, model_source_set = collect_model_downloads()
 
 	return conditional_download_hashes(model_hash_set) and conditional_download_sources(model_source_set)
 
 
+def is_content_analyser_enabled() -> bool:
+	return state_manager.get_item('content_analyser_enabled') is True
+
+
 def analyse_stream(vision_frame : VisionFrame, video_fps : Fps) -> bool:
 	global STREAM_COUNTER
+
+	if not is_content_analyser_enabled():
+		return False
 
 	STREAM_COUNTER = STREAM_COUNTER + 1
 	if STREAM_COUNTER % int(video_fps) == 0:
@@ -155,17 +165,25 @@ def analyse_stream(vision_frame : VisionFrame, video_fps : Fps) -> bool:
 
 
 def analyse_frame(vision_frame : VisionFrame) -> bool:
+	if not is_content_analyser_enabled():
+		return False
 	return detect_nsfw(vision_frame)
 
 
 @lru_cache()
 def analyse_image(image_path : str) -> bool:
+	if not is_content_analyser_enabled():
+		return False
+
 	vision_frame = read_image(image_path)
 	return analyse_frame(vision_frame)
 
 
 @lru_cache()
 def analyse_video(video_path : str, trim_frame_start : int, trim_frame_end : int) -> bool:
+	if not is_content_analyser_enabled():
+		return False
+
 	video_fps = detect_video_fps(video_path)
 	frame_range = range(trim_frame_start, trim_frame_end)
 	video_reader = video_manager.get_reader(video_path, 'analyse_video')
