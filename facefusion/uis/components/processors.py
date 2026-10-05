@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import gradio
 
@@ -9,13 +9,18 @@ from facefusion.uis.core import register_ui_component
 
 PROCESSORS_CHECKBOX_GROUP : Optional[gradio.CheckboxGroup] = None
 
+PROCESSOR_NAME_SET : Dict[str, str] =\
+{
+	'rtx_upscaler': 'RTX Super Resolution'
+}
+
 
 def render() -> None:
 	global PROCESSORS_CHECKBOX_GROUP
 
 	PROCESSORS_CHECKBOX_GROUP = gradio.CheckboxGroup(
 		label = translator.get('uis.processors_checkbox_group'),
-		choices = sort_processors(state_manager.get_item('processors')),
+		choices = create_processor_choices(state_manager.get_item('processors')),
 		value = state_manager.get_item('processors')
 	)
 	register_ui_component('processors_checkbox_group', PROCESSORS_CHECKBOX_GROUP)
@@ -35,7 +40,18 @@ def update_processors(processors : List[str]) -> gradio.CheckboxGroup:
 			return gradio.CheckboxGroup()
 
 	state_manager.set_item('processors', processors)
-	return gradio.CheckboxGroup(value = state_manager.get_item('processors'), choices = sort_processors(state_manager.get_item('processors')))
+	return gradio.CheckboxGroup(value = state_manager.get_item('processors'), choices = create_processor_choices(state_manager.get_item('processors')))
+
+
+def create_processor_choices(processors : List[str]) -> List[Tuple[str, str]]:
+	return [ (prettify_processor_name(processor), processor) for processor in sort_processors(processors) ]
+
+
+def prettify_processor_name(processor : str) -> str:
+	if processor in PROCESSOR_NAME_SET:
+		return PROCESSOR_NAME_SET.get(processor)
+
+	return ' '.join([ word.capitalize() for word in processor.split('_') ])
 
 
 def sort_processors(processors : List[str]) -> List[str]:
