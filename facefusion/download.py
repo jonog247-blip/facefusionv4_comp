@@ -34,7 +34,7 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 					curl_builder.set_retry(5)
 				)
 
-				open_curl(commands)
+				download_process = open_curl(commands)
 				current_size = initial_size
 				progress.set_postfix(download_providers = state_manager.get_item('download_providers'), file_name = download_file_name)
 
@@ -42,6 +42,15 @@ def conditional_download(download_directory_path : str, urls : List[str]) -> Non
 					if is_file(download_file_path):
 						current_size = get_file_size(download_file_path)
 						progress.update(current_size - progress.n)
+
+					if download_process.poll() is not None:
+						if is_file(download_file_path):
+							current_size = get_file_size(download_file_path)
+							progress.update(current_size - progress.n)
+
+						if current_size < download_size:
+							logger.error(translator.get('downloading_incomplete').format(file_name = download_file_name), __name__)
+						break
 
 
 @lru_cache(maxsize = 64)
@@ -52,13 +61,15 @@ def get_static_download_size(url : str) -> int:
 	)
 
 	process = open_curl(commands)
-	lines = reversed(process.stdout.readlines())
 
-	for line in lines:
-		__line__ = line.decode().lower()
-		if 'content-length:' in __line__:
-			_, content_length = __line__.split('content-length:')
-			return int(content_length)
+	if process.wait() == 0:
+		lines = reversed(process.stdout.readlines())
+
+		for line in lines:
+			__line__ = line.decode().lower()
+			if 'content-length:' in __line__:
+				_, content_length = __line__.split('content-length:')
+				return int(content_length)
 
 	return 0
 
@@ -100,8 +111,7 @@ def conditional_download_hashes(hash_set : DownloadSet) -> bool:
 	if invalid_hash_paths:
 		logger.error(translator.get('download_model_failed'), __name__)
 
-	if not invalid_hash_paths:
-		process_manager.end()
+	process_manager.end()
 	return not invalid_hash_paths
 
 
@@ -133,8 +143,7 @@ def conditional_download_sources(source_set : DownloadSet) -> bool:
 	if invalid_source_paths:
 		logger.error(translator.get('download_model_failed'), __name__)
 
-	if not invalid_source_paths:
-		process_manager.end()
+	process_manager.end()
 	return not invalid_source_paths
 
 

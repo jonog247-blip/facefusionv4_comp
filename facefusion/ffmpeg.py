@@ -35,6 +35,9 @@ def run_ffmpeg_with_progress(commands : List[Command], update_progress : UpdateP
 			process.wait(timeout = 0.5)
 		except subprocess.TimeoutExpired:
 			continue
+
+		if process_manager.is_stopping():
+			process.terminate()
 		return process
 
 	return process
@@ -139,14 +142,14 @@ def get_available_encoder_set() -> EncoderSet:
 			audio_encoder = line.split()[1]
 
 			if audio_encoder in facefusion.choices.output_audio_encoders:
-				index = facefusion.choices.output_audio_encoders.index(audio_encoder) #type:ignore[arg-type]
-				available_encoder_set['audio'].insert(index, audio_encoder) #type:ignore[arg-type]
+				index = facefusion.choices.output_audio_encoders.index(cast(AudioEncoder, audio_encoder))
+				available_encoder_set['audio'].insert(index, cast(AudioEncoder, audio_encoder))
 		if line.startswith(' v'):
 			video_encoder = line.split()[1]
 
 			if video_encoder in facefusion.choices.output_video_encoders:
-				index = facefusion.choices.output_video_encoders.index(video_encoder) #type:ignore[arg-type]
-				available_encoder_set['video'].insert(index, video_encoder) #type:ignore[arg-type]
+				index = facefusion.choices.output_video_encoders.index(cast(VideoEncoder, video_encoder))
+				available_encoder_set['video'].insert(index, cast(VideoEncoder, video_encoder))
 
 	return available_encoder_set
 
