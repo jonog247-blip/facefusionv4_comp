@@ -144,7 +144,7 @@ rem --------------------------------------------------------------- ffmpeg
 where ffmpeg >nul 2>nul
 if errorlevel 1 (
 	echo  [INFO] installing ffmpeg ...
-	call conda install -y -q -c conda-forge --override-channels ffmpeg
+	call conda install -y -q -c conda-forge ffmpeg
 )
 where ffmpeg >nul 2>nul
 if errorlevel 1 (
