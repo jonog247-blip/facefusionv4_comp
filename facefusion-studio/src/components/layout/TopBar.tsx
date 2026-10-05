@@ -22,7 +22,7 @@ const SessionClock = () => {
 	return (
 		<div className="flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.04] px-2.5 py-1">
 			<Dot tone={ratio > 0.3 ? 'success' : ratio > 0.1 ? 'warning' : 'danger'} pulse={ratio < 0.1} />
-			<span className="tabular font-mono text-[10px] text-ink-soft">
+			<span className="tabular font-mono text-sm text-ink-soft">
 				{Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, '0')}
 			</span>
 			<div className="w-8">
@@ -75,7 +75,7 @@ export const TopBar = ({
 	return (
 		<header className="glass z-30 flex h-12 shrink-0 items-center justify-between gap-3 px-3">
 			<div className="flex min-w-0 items-center gap-2.5">
-				<span className="flex items-center gap-2 text-[13px] font-semibold tracking-tight">
+				<span className="flex items-center gap-2 text-sm font-semibold tracking-tight">
 					<span className="grid h-6 w-6 place-items-center rounded-lg bg-apple/15 text-apple">
 						<Sparkles className="h-3.5 w-3.5" />
 					</span>
@@ -109,16 +109,16 @@ export const TopBar = ({
 
 			{settingsOpen ? (
 				<div className="glass-elevated animate-in-up absolute right-3 top-13 z-40 w-[300px] rounded-2xl p-3 shadow-2xl">
-					<p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-ink">
+					<p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-ink">
 						<Database className="h-3.5 w-3.5 text-apple" /> API endpoint
 					</p>
 					<input
 						value={draft}
 						onChange={(event) => setDraft(event.target.value)}
 						spellCheck={false}
-						className="h-8 w-full rounded-lg border border-white/10 bg-white/[0.04] px-2.5 font-mono text-[11px] text-ink focus:border-apple/60 focus:outline-none"
+						className="h-8 w-full rounded-lg border border-white/10 bg-white/[0.04] px-2.5 font-mono text-sm text-ink focus:border-apple/60 focus:outline-none"
 					/>
-					<p className="mt-1.5 text-[10px] leading-relaxed text-ink-faint">
+					<p className="mt-1.5 text-sm leading-relaxed text-ink-faint">
 						Defaults to <span className="font-mono">--api-host</span> / <span className="font-mono">--api-port</span> of
 						the running <span className="font-mono">facefusion.py api</span> process.
 					</p>

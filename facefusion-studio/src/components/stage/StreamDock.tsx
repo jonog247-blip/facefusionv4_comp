@@ -28,13 +28,13 @@ const PoseDial = () => {
 					/>
 					<line x1="50" y1="50" x2="50" y2="14" stroke="rgba(255,255,255,0.5)" strokeWidth="3" strokeLinecap="round" />
 				</svg>
-				<span className="tabular absolute inset-0 flex items-center justify-center font-mono text-[10px] text-ink-soft">
+				<span className="tabular absolute inset-0 flex items-center justify-center font-mono text-sm text-ink-soft">
 					{Math.round(yaw)}°
 				</span>
 			</div>
 			<div className="min-w-0">
 				<Eyebrow>Live target pose</Eyebrow>
-				<p className="tabular truncate font-mono text-[10px] text-ink-soft">
+				<p className="tabular truncate font-mono text-sm text-ink-soft">
 					{hasData
 						? `${insight.samples} frames · ${Math.round(insight.coverage * 100)}% covered`
 						: 'sample a target to arm the router'}
@@ -212,18 +212,18 @@ export const StreamDock = () => {
 						{!sampling ? (
 							<div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-ink-faint">
 								<Camera className="h-4 w-4" />
-								<span className="text-[10px]">camera idle</span>
+								<span className="text-sm">camera idle</span>
 							</div>
 						) : null}
 					</div>
 
 					<div className="flex flex-col justify-between gap-2">
 						<PoseDial />
-						<p className="text-[10px] leading-relaxed text-ink-faint">
+						<p className="text-sm leading-relaxed text-ink-faint">
 							Every sampled frame is measured in the browser. The yaw feeds the pose router, which selects the
 							source asset closest to the current angle and hands it to <span className="font-mono">/state?action=select</span>.
 						</p>
-						{cameraError ? <p className="text-[10px] text-danger">{cameraError}</p> : null}
+						{cameraError ? <p className="text-sm text-danger">{cameraError}</p> : null}
 					</div>
 				</div>
 			</div>

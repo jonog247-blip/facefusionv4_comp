@@ -30,7 +30,7 @@ const AngleRow = ({
 		].join(' ')}
 	>
 		<button type="button" onClick={onSelect} className="flex w-full items-center gap-2.5 p-2 text-left">
-			<span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-black/40">
+			<span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-black/40">
 				<img src={entry.previewUrl} alt={entry.name} className="h-full w-full object-cover" />
 				<span
 					className={[
@@ -43,11 +43,11 @@ const AngleRow = ({
 			</span>
 			<span className="min-w-0 flex-1">
 				<span className="flex items-center gap-1.5">
-					<span className="truncate text-[11px] font-medium text-ink">{bucketLabel[entry.bucket]}</span>
+					<span className="truncate text-sm font-medium text-ink">{bucketLabel[entry.bucket]}</span>
 					{active ? <Badge tone="accent">routing</Badge> : null}
 					{entry.origin === 'manual' ? <Badge tone="warning">manual</Badge> : null}
 				</span>
-				<span className="tabular mt-0.5 block truncate font-mono text-[10px] text-ink-faint">
+				<span className="tabular mt-0.5 block truncate font-mono text-sm text-ink-faint">
 					{Math.round(entry.pose.yaw)}° · {Math.round(entry.pose.pitch)}° · {Math.round(entry.pose.roll)}°
 				</span>
 			</span>
@@ -56,7 +56,7 @@ const AngleRow = ({
 		{selected ? (
 			<div className="border-t border-white/8 px-2.5 py-2">
 				<div className="flex items-center gap-2">
-					<span className="w-10 text-[10px] font-semibold uppercase tracking-wide text-ink-faint">Yaw</span>
+					<span className="w-10 text-sm font-semibold uppercase tracking-wide text-ink-faint">Yaw</span>
 					<input
 						type="range"
 						min={-90}
@@ -66,11 +66,11 @@ const AngleRow = ({
 						onChange={(event) => onYaw(Number(event.target.value))}
 						className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-white/12 accent-apple"
 					/>
-					<span className="tabular w-10 text-right font-mono text-[10px] text-ink-soft">
+					<span className="tabular w-10 text-right font-mono text-sm text-ink-soft">
 						{Math.round(entry.pose.yaw)}°
 					</span>
 				</div>
-				<p className="mt-1.5 font-mono text-[10px] text-ink-faint">{describePose(entry.pose)}</p>
+				<p className="mt-1.5 font-mono text-sm text-ink-faint">{describePose(entry.pose)}</p>
 			</div>
 		) : null}
 
@@ -118,7 +118,7 @@ export const MultiAngleBuilder = () => {
 		<div className="flex flex-col gap-3">
 			<div className="flex items-center justify-between gap-2">
 				<Eyebrow className="flex items-center gap-1.5">
-					<Rotate3D className="h-3 w-3" /> Multi-angle head
+					<Rotate3D className="h-3.5 w-3.5" /> 3D face sources
 				</Eyebrow>
 				<Button
 					size="sm"
@@ -143,7 +143,7 @@ export const MultiAngleBuilder = () => {
 			</div>
 
 			<Suspense
-				fallback={<div className="h-[236px] w-full animate-pulse-soft rounded-2xl border border-white/8 bg-white/[0.03]" />}
+				fallback={<div className="h-[320px] w-full animate-pulse-soft rounded-2xl border border-white/8 bg-white/[0.03]" />}
 			>
 				<HeadCanvas
 					angles={angles}
@@ -169,7 +169,7 @@ export const MultiAngleBuilder = () => {
 					))}
 				</ul>
 			) : (
-				<p className="rounded-xl border border-dashed border-white/10 px-3 py-3 text-[11px] leading-relaxed text-ink-faint">
+				<p className="rounded-xl border border-dashed border-white/10 px-3 py-3 text-sm leading-relaxed text-ink-faint">
 					Add 3 – 5 photos of the same face. Each one is measured in the browser with the MediaPipe face
 					landmarker, then pinned onto the head so the router can hand FaceFusion a source that already
 					matches the target&rsquo;s pose.
@@ -180,7 +180,7 @@ export const MultiAngleBuilder = () => {
 				<div className="card flex flex-col gap-2.5 p-2.5">
 					<div className="flex items-center justify-between">
 						<Eyebrow className="flex items-center gap-1.5">
-							<Crosshair className="h-3 w-3" /> Pose router
+							<Crosshair className="h-3.5 w-3.5" /> Pose router
 						</Eyebrow>
 						<Switch checked={autoRoute} onChange={setAutoRoute} label="Automatic routing" />
 					</div>
@@ -195,7 +195,7 @@ export const MultiAngleBuilder = () => {
 						]}
 					/>
 
-					<div className="flex items-center justify-between text-[10px] text-ink-faint">
+					<div className="flex items-center justify-between text-sm text-ink-faint">
 						<span>Target coverage</span>
 						<span className="tabular font-mono">
 							{insight.samples ? `${Math.round(insight.coverage * 100)}% of ${insight.samples} frames` : 'no target sampled'}
@@ -203,7 +203,7 @@ export const MultiAngleBuilder = () => {
 					</div>
 					<Meter value={insight.coverage} tone={insight.coverage > 0.66 ? 'success' : insight.coverage > 0.33 ? 'warning' : 'danger'} />
 
-					<p className="text-[10px] leading-relaxed text-ink-faint">
+					<p className="text-sm leading-relaxed text-ink-faint">
 						{route
 							? `Routing ${Math.round(route.delta)}° off ${bucketLabel[route.entries[0].bucket].toLowerCase()} with ${route.entries.length} source asset${
 									route.entries.length > 1 ? 's' : ''
@@ -219,7 +219,7 @@ export const MultiAngleBuilder = () => {
 						))}
 					</div>
 
-					{landmarkerDetail ? <p className="text-[10px] text-warning/80">{landmarkerDetail}</p> : null}
+					{landmarkerDetail ? <p className="text-sm text-warning/80">{landmarkerDetail}</p> : null}
 				</div>
 			) : null}
 		</div>

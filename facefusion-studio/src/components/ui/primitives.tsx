@@ -22,9 +22,9 @@ const variantClass: Record<ButtonVariant, string> = {
 };
 
 const sizeClass: Record<ButtonSize, string> = {
-	sm: 'h-7 px-2.5 text-[11px] gap-1.5 rounded-lg',
-	md: 'h-9 px-3.5 text-xs gap-2 rounded-[10px]',
-	lg: 'h-11 px-5 text-sm gap-2 rounded-xl'
+	sm: 'h-8 px-3 text-xs gap-1.5 rounded-lg',
+	md: 'h-10 px-4 text-sm gap-2 rounded-[10px]',
+	lg: 'h-12 px-5 text-sm gap-2 rounded-xl'
 };
 
 export const Button = ({
@@ -42,6 +42,7 @@ export const Button = ({
 			'inline-flex items-center justify-center font-medium whitespace-nowrap select-none',
 			'transition-[background-color,border-color,color,transform,opacity] duration-150 ease-[var(--ease-spring)]',
 			'active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40',
+		'font-medium tracking-[-0.005em]',
 			variantClass[variant],
 			sizeClass[size],
 			active && 'ring-1 ring-apple/60',
@@ -66,7 +67,7 @@ export const IconButton = ({ label, active, tone = 'default', className, childre
 		aria-label={label}
 		title={label}
 		className={cx(
-			'inline-flex h-8 w-8 items-center justify-center rounded-[10px] border transition duration-150',
+			'inline-flex h-9 w-9 items-center justify-center rounded-[11px] border transition duration-150',
 			'active:scale-95 disabled:pointer-events-none disabled:opacity-40',
 			tone === 'danger'
 				? 'border-transparent text-ink-faint hover:bg-danger/15 hover:text-danger'
@@ -105,7 +106,7 @@ export const Badge = ({
 }) => (
 	<span
 		className={cx(
-			'inline-flex items-center gap-1 rounded-full border px-2 py-[3px] text-[10px] font-semibold tracking-wide',
+			'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-[4px] text-sm font-semibold tracking-wide',
 			toneClass[tone],
 			className
 		)}
@@ -117,7 +118,7 @@ export const Badge = ({
 export const Dot = ({ tone = 'neutral', pulse }: { tone?: Tone; pulse?: boolean }) => (
 	<span
 		className={cx(
-			'inline-block h-1.5 w-1.5 shrink-0 rounded-full',
+			'inline-block h-2 w-2 shrink-0 rounded-full',
 			tone === 'accent' && 'bg-apple',
 			tone === 'success' && 'bg-success',
 			tone === 'warning' && 'bg-warning',
@@ -145,15 +146,15 @@ export const PanelHeader = ({
 }) => (
 	<header className="flex items-center justify-between gap-2 border-b border-line px-3.5 py-2.5">
 		<div className="min-w-0">
-			<h2 className="truncate text-[13px] font-semibold tracking-tight text-ink">{title}</h2>
-			{subtitle ? <p className="truncate text-[11px] text-ink-faint">{subtitle}</p> : null}
+			<h2 className="truncate text-sm font-semibold tracking-tight text-ink">{title}</h2>
+			{subtitle ? <p className="truncate text-sm text-ink-faint">{subtitle}</p> : null}
 		</div>
 		{action}
 	</header>
 );
 
 export const Eyebrow = ({ children, className }: { children: ReactNode; className?: string }) => (
-	<p className={cx('eyebrow', className)}>{children}</p>
+	<p className={cx('eyebrow leading-relaxed', className)}>{children}</p>
 );
 
 export const Switch = ({
@@ -172,14 +173,14 @@ export const Switch = ({
 		aria-label={label}
 		onClick={() => onChange(!checked)}
 		className={cx(
-			'relative h-[20px] w-[34px] shrink-0 rounded-full border transition-colors duration-200',
-			checked ? 'border-apple/50 bg-apple' : 'border-white/10 bg-white/10'
+			'relative h-[24px] w-[42px] shrink-0 rounded-full border transition-colors duration-200',
+			checked ? 'border-apple/50 bg-apple' : 'border-white/12 bg-white/10'
 		)}
 	>
 		<span
 			className={cx(
-				'absolute top-[2px] h-[14px] w-[14px] rounded-full bg-white shadow transition-transform duration-200 ease-[var(--ease-spring)]',
-				checked ? 'translate-x-[17px]' : 'translate-x-[2px]'
+				'absolute top-[2px] h-[18px] w-[18px] rounded-full bg-white shadow transition-transform duration-200 ease-[var(--ease-spring)]',
+				checked ? 'translate-x-[21px]' : 'translate-x-[2px]'
 			)}
 		/>
 	</button>
@@ -188,7 +189,7 @@ export const Switch = ({
 export const TextField = ({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) => (
 	<input
 		className={cx(
-			'h-8 w-full rounded-lg border border-white/10 bg-white/[0.04] px-2.5 text-xs text-ink',
+			'h-10 w-full rounded-[10px] border border-white/12 bg-white/[0.05] px-3 text-sm text-ink',
 			'placeholder:text-ink-faint focus:border-apple/60 focus:outline-none',
 			className
 		)}
@@ -215,7 +216,7 @@ export const Segmented = <T extends string>({
 				title={option.title}
 				onClick={() => onChange(option.value)}
 				className={cx(
-					'flex-1 rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors duration-150',
+					'flex-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors duration-150',
 					value === option.value ? 'bg-apple text-white' : 'text-ink-soft hover:text-ink'
 				)}
 			>
@@ -226,7 +227,7 @@ export const Segmented = <T extends string>({
 );
 
 export const Meter = ({ value, tone = 'accent' }: { value: number; tone?: Tone }) => (
-	<div className="h-1.5 w-full overflow-hidden rounded-full bg-white/8">
+	<div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
 		<div
 			className={cx(
 				'h-full rounded-full transition-[width] duration-500 ease-[var(--ease-spring)]',
@@ -265,15 +266,15 @@ export const EmptyState = ({
 }) => (
 	<div className="flex flex-col items-center justify-center gap-2 px-4 py-8 text-center">
 		{icon ? <div className="text-ink-faint">{icon}</div> : null}
-		<p className="text-xs font-medium text-ink-soft">{title}</p>
-		{detail ? <p className="max-w-[26ch] text-[11px] leading-relaxed text-ink-faint">{detail}</p> : null}
+		<p className="text-sm font-medium text-ink-soft">{title}</p>
+		{detail ? <p className="max-w-[32ch] text-xs leading-relaxed text-ink-faint">{detail}</p> : null}
 		{action}
 	</div>
 );
 
 export const KeyValue = ({ label, value }: { label: ReactNode; value: ReactNode }) => (
 	<div className="flex items-baseline justify-between gap-3 py-[3px]">
-		<span className="truncate text-[11px] text-ink-faint">{label}</span>
-		<span className="tabular shrink-0 font-mono text-[11px] text-ink-soft">{value}</span>
+		<span className="truncate text-xs text-ink-faint">{label}</span>
+		<span className="tabular shrink-0 font-mono text-xs text-ink-soft">{value}</span>
 	</div>
 );

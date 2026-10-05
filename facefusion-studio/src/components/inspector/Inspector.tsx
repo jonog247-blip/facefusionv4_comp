@@ -2,53 +2,88 @@ import { useMemo, useState } from 'react';
 import { ChevronRight, Cpu, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { useStudio } from '../../store/studio';
 import { humanizeKey } from '../../api/config';
+import type { Capability } from '../../api/types';
 import { CapabilityControl } from './controls';
-import { Badge, Dot, Eyebrow, Panel, PanelHeader, Spinner } from '../ui/primitives';
+import { Badge, Dot, Eyebrow, PanelHeader, Spinner } from '../ui/primitives';
 
-const GROUP_HINTS: Record<string, string> = {
-	workflow: 'How the engine chains the processors',
-	processors: 'Enabled processors, applied in order',
-	face_detector: 'Detection model, size, angles and confidence',
-	face_aligner: 'Landmark alignment model',
-	face_selector: 'Which faces in the target get processed',
-	face_tracker: 'Tracking confidence across frames',
-	face_masker: 'Occluders, parsers and mask regions',
-	voice_extractor: 'Audio source for lip syncing',
-	frame_extraction: 'Trim range and intermediate format',
-	frame_distribution: 'How frames are spread over workers',
-	output_creation: 'Encoder, quality, scale and fps'
+/**
+ * `face_masker` renders as "face masker" and `frame_extraction` as
+ * "frame extraction" — technically right, useless to read. Every group gets a
+ * plain-language title, and the engine key stays visible underneath.
+ */
+const GROUP_LABELS: Record<string, { title: string; hint: string }> = {
+	workflow: { title: 'Workflow', hint: 'How the engine chains the processors together' },
+	processors: { title: 'Processors', hint: 'Enabled processors, applied in the order shown' },
+	face_detector: { title: 'Face detection', hint: 'Detector model, input size, search angles and confidence' },
+	face_aligner: { title: 'Landmark alignment', hint: 'Model used to fit the 5-point face landmarks' },
+	face_selector: { title: 'Face selection', hint: 'Which detected faces of the target get processed' },
+	face_tracker: { title: 'Face tracking', hint: 'Tracking confidence used to keep an identity across frames' },
+	face_masker: { title: 'Masks & occluders', hint: 'Occluder and parser models, plus the mask shape and blend' },
+	voice_extractor: { title: 'Voice source', hint: 'Audio model that supplies the voice for lip syncing' },
+	frame_extraction: { title: 'Frames in & out', hint: 'Trim range, intermediate frame format and pixel format' },
+	frame_distribution: { title: 'Frame distribution', hint: 'How frames are spread across workers' },
+	output_creation: { title: 'Output encoding', hint: 'Encoder, quality, scale, volume and frame rate' },
+	download: { title: 'Downloads', hint: 'Where model files come from' },
+	benchmark: { title: 'Benchmark', hint: 'Used by the benchmark command' },
+	age_modifier: { title: 'Age modifier', hint: 'Perceived-age model and direction' },
+	background_remover: { title: 'Background remover', hint: 'Matting model, fill and despill colours' },
+	deep_swapper: { title: 'Deep swapper', hint: 'Pre-trained identity models and morph strength' },
+	expression_restorer: { title: 'Expression restorer', hint: 'Restores the original expression after a swap' },
+	face_debugger: { title: 'Face debugger', hint: 'Draws landmarks, boxes and masks — useful for tuning' },
+	face_editor: { title: 'Face editor', hint: 'Drives brows, eyes, mouth and head pose' },
+	face_enhancer: { title: 'Face enhancer', hint: 'Restores detail in the swapped face' },
+	face_swapper: { title: 'Face swapper', hint: 'Identity model, pixel boost and embedding weight' },
+	frame_colorizer: { title: 'Frame colouriser', hint: 'Colourises monochrome frames' },
+	frame_enhancer: { title: 'Frame enhancer', hint: 'Upscales and restores whole frames' },
+	lip_syncer: { title: 'Lip syncer', hint: 'Drives the mouth from the voice track' },
+	misc: { title: 'Engine', hint: 'Server-wide options' }
 };
 
-const GroupSection = ({ group, entries, open, onToggle }: { group: string; entries: [string, unknown][]; open: boolean; onToggle: () => void }) => (
+const groupTitle = (group: string) => GROUP_LABELS[group]?.title ?? humanizeKey(group);
+const groupHint = (group: string) => GROUP_LABELS[group]?.hint ?? '';
+
+const GroupSection = ({
+	group,
+	names,
+	open,
+	onToggle
+}: {
+	group: string;
+	names: string[];
+	open: boolean;
+	onToggle: () => void;
+}) => (
 	<section className="border-b border-line last:border-b-0">
 		<button
 			type="button"
 			onClick={onToggle}
-			className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left transition hover:bg-white/[0.03]"
+			aria-expanded={open}
+			className="flex w-full items-center gap-2.5 px-4 py-3 text-left transition hover:bg-white/[0.04]"
 		>
 			<ChevronRight
-				className={`h-3.5 w-3.5 shrink-0 text-ink-faint transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
+				className={`h-4 w-4 shrink-0 text-ink-faint transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
 			/>
-			<span className="flex-1 truncate text-[12px] font-semibold capitalize tracking-tight text-ink">
-				{group.replace(/_/g, ' ')}
-			</span>
-			<Badge tone="neutral">{entries.length}</Badge>
+			<span className="flex-1 truncate text-sm font-semibold tracking-tight text-ink">{groupTitle(group)}</span>
+			<Badge tone={open ? 'accent' : 'neutral'}>{names.length}</Badge>
 		</button>
 		{open ? (
-			<div className="animate-in-up flex flex-col gap-3 px-3.5 pb-3.5">
-				{GROUP_HINTS[group] ? <p className="-mt-1 text-[10px] text-ink-faint">{GROUP_HINTS[group]}</p> : null}
-				<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-					{entries.map(([name]) => (
+			<div className="animate-in-up flex flex-col gap-4 px-4 pb-4">
+				{groupHint(group) ? (
+					<p className="-mt-1 text-xs leading-relaxed text-ink-faint">{groupHint(group)}</p>
+				) : null}
+				<div className="flex flex-col gap-4">
+					{names.map((name) => (
 						<ControlSlot key={name} name={name} />
 					))}
 				</div>
+				<p className="font-mono text-sm text-ink-faint/70">group: {group}</p>
 			</div>
 		) : null}
 	</section>
 );
 
 const ControlSlot = ({ name }: { name: string }) => {
-	const capability = useStudio((state) => {
+	const capability = useStudio((state): Capability | undefined => {
 		const arguments_ = state.capabilities?.arguments;
 
 		if (!arguments_) {
@@ -95,21 +130,21 @@ export const Inspector = () => {
 		return Object.entries(capabilities.arguments)
 			.map(([group, entries]) => ({
 				group,
-				entries: Object.keys(entries).filter((name) =>
-					filter ? humanizeKey(name).includes(filter.toLowerCase()) : true
+				names: Object.keys(entries).filter((name) =>
+					filter ? `${name} ${groupTitle(group)}`.toLowerCase().includes(filter.toLowerCase()) : true
 				)
 			}))
-			.filter((entry) => entry.entries.length)
+			.filter((entry) => entry.names.length)
 			.sort((a, b) => {
 				if (a.group === 'processors') return -1;
 				if (b.group === 'processors') return 1;
-				return a.group.localeCompare(b.group);
+				return groupTitle(a.group).localeCompare(groupTitle(b.group));
 			});
 	}, [capabilities, filter]);
 
 	if (!capabilities || !state) {
 		return (
-			<div className="flex h-full items-center justify-center gap-2 p-6 text-xs text-ink-faint">
+			<div className="flex h-full items-center justify-center gap-2 p-6 text-sm text-ink-faint">
 				<Spinner /> Reading server capabilities…
 			</div>
 		);
@@ -122,37 +157,39 @@ export const Inspector = () => {
 			<PanelHeader
 				title={
 					<span className="flex items-center gap-2">
-						<SlidersHorizontal className="h-3.5 w-3.5 text-apple" /> Engine inspector
+						<SlidersHorizontal className="h-4 w-4 text-apple" /> Engine inspector
 					</span>
 				}
 				subtitle={`${total} options generated from GET /capabilities`}
 			/>
-			<input
-				value={filter}
-				onChange={(event) => setFilter(event.target.value)}
-				placeholder="Filter options…"
-				className="mx-3.5 mt-3 h-8 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 text-[11px] text-ink placeholder:text-ink-faint focus:border-apple/60 focus:outline-none"
-			/>
+			<div className="px-4 pt-3">
+				<input
+					value={filter}
+					onChange={(event) => setFilter(event.target.value)}
+					placeholder="Filter options…"
+					className="h-10 w-full rounded-[10px] border border-white/12 bg-white/[0.05] px-3 text-sm text-ink placeholder:text-ink-faint focus:border-apple/60 focus:outline-none"
+				/>
+			</div>
 			<div className="mt-3 min-h-0 flex-1 overflow-y-auto scroll-thin">
 				{groups.length ? (
-					groups.map(({ group, entries }) => (
+					groups.map(({ group, names }) => (
 						<GroupSection
 							key={group}
 							group={group}
-							entries={entries.map((name) => [name, state[name] as unknown])}
+							names={names}
 							open={Boolean(open[group])}
 							onToggle={() => setOpen((current) => ({ ...current, [group]: !current[group] }))}
 						/>
 					))
 				) : (
-					<p className="px-4 py-6 text-center text-[11px] text-ink-faint">No option matches “{filter}”.</p>
+					<p className="px-4 py-6 text-center text-sm text-ink-faint">No option matches “{filter}”.</p>
 				)}
 			</div>
-			<footer className="flex items-center justify-between border-t border-line px-3.5 py-2">
-				<Eyebrow className="flex items-center gap-1.5">
-					<Cpu className="h-3 w-3" /> {String(state.execution_providers ?? '—')}
+			<footer className="flex items-center justify-between border-t border-line px-4 py-2.5">
+				<Eyebrow className="flex items-center gap-1.5 normal-case">
+					<Cpu className="h-3.5 w-3.5" /> {String(state.execution_providers ?? '—')}
 				</Eyebrow>
-				<span className="flex items-center gap-1.5 text-[10px] text-ink-faint">
+				<span className="flex items-center gap-1.5 text-xs text-ink-faint">
 					<Dot tone={jobBusy ? 'accent' : 'neutral'} pulse={jobBusy} />
 					{jobBusy ? 'job running' : 'idle'}
 				</span>
@@ -166,11 +203,11 @@ export const RenderSummary = () => {
 	const processors = Array.isArray(state?.processors) ? (state.processors as string[]) : [];
 
 	return (
-		<Panel className="flex items-center gap-2 px-3 py-2">
-			<Sparkles className="h-3.5 w-3.5 text-apple" />
-			<span className="truncate text-[11px] text-ink-soft">
+		<div className="card flex items-center gap-2 px-3 py-2.5">
+			<Sparkles className="h-4 w-4 text-apple" />
+			<span className="truncate text-sm text-ink-soft">
 				{processors.length ? processors.join(' → ') : 'no processor selected'}
 			</span>
-		</Panel>
+		</div>
 	);
 };

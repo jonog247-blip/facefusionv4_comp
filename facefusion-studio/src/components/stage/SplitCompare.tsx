@@ -182,7 +182,7 @@ export const SplitCompare = () => {
 			<div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-white/8 bg-black/40">{frame}</div>
 			<div className="flex items-center justify-between gap-2 px-1 py-2">
 				<StepButtons />
-				<div className="flex items-center gap-1.5 text-[10px] text-ink-faint">
+				<div className="flex items-center gap-1.5 text-sm text-ink-faint">
 					<Clapperboard className="h-3 w-3" />
 					<span className="tabular">
 						{source?.name ?? 'no source'} → {processed?.name ?? 'no result'}
@@ -219,7 +219,7 @@ const StepButtons = () => {
 		<div className="flex flex-wrap items-center gap-1">
 			{steps.map((processor, index) => (
 				<span key={processor} className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.05] px-1.5 py-1">
-					<span className="text-[10px] font-medium text-ink-soft">{processor.replace(/_/g, ' ')}</span>
+					<span className="text-sm font-medium text-ink-soft">{processor.replace(/_/g, ' ')}</span>
 					<button type="button" aria-label="Move up" className="text-ink-faint hover:text-ink" onClick={() => move(index, -1)}>
 						<ChevronLeft className="h-3 w-3 rotate-90" />
 					</button>

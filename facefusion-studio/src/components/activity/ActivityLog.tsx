@@ -24,7 +24,7 @@ export const ActivityLog = () => {
 				action={
 					<div className="flex items-center gap-2">
 						{latest ? (
-							<span className="flex items-center gap-1.5 text-[10px] text-ink-faint">
+							<span className="flex items-center gap-1.5 text-sm text-ink-faint">
 								<Badge tone={toneFor(latest.level) as 'neutral' | 'success' | 'warning' | 'danger'}>
 									{latest.level}
 								</Badge>
@@ -43,7 +43,7 @@ export const ActivityLog = () => {
 						log.map((entry) => (
 							<li key={entry.id} className="flex items-start gap-2 border-b border-white/5 py-1.5 last:border-0">
 								<Badge tone={toneFor(entry.level) as 'neutral' | 'success' | 'warning' | 'danger'}>{entry.level}</Badge>
-								<span className="flex-1 text-[11px] leading-relaxed text-ink-soft">{entry.message}</span>
+								<span className="flex-1 text-sm leading-relaxed text-ink-soft">{entry.message}</span>
 								<button
 									type="button"
 									aria-label="Dismiss"
@@ -52,13 +52,13 @@ export const ActivityLog = () => {
 								>
 									<X className="h-3 w-3" />
 								</button>
-								<span className="tabular shrink-0 font-mono text-[10px] text-ink-faint">
+								<span className="tabular shrink-0 font-mono text-sm text-ink-faint">
 									{new Date(entry.at).toLocaleTimeString()}
 								</span>
 							</li>
 						))
 					) : (
-						<li className="py-2 text-center text-[11px] text-ink-faint">Nothing yet.</li>
+						<li className="py-2 text-center text-sm text-ink-faint">Nothing yet.</li>
 					)}
 				</ul>
 			) : null}

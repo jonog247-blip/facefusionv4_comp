@@ -28,7 +28,7 @@ const JobCard = ({ jobId }: { jobId: string }) => {
 	return (
 		<li className={`rounded-xl border p-2.5 ${active ? 'border-apple/40 bg-apple/[0.07]' : 'border-white/8 bg-white/[0.03]'}`}>
 			<div className="flex items-center justify-between gap-2">
-				<button type="button" className="truncate font-mono text-[11px] text-ink" onClick={() => setActiveJob(active ? null : jobId)}>
+				<button type="button" className="truncate font-mono text-sm text-ink" onClick={() => setActiveJob(active ? null : jobId)}>
 					{jobId}
 				</button>
 				<div className="flex items-center gap-1">
@@ -47,15 +47,15 @@ const JobCard = ({ jobId }: { jobId: string }) => {
 			{active && detail ? (
 				<ul className="mt-2 flex flex-col gap-1">
 					{detail.steps.map((step, index) => (
-						<li key={`${jobId}-${index}`} className="flex items-center gap-2 text-[11px] text-ink-soft">
+						<li key={`${jobId}-${index}`} className="flex items-center gap-2 text-sm text-ink-soft">
 							<StepIcon status={step.status} />
 							<span className="flex-1 truncate capitalize">{step.args.processors.join(' → ') || 'step'}</span>
-							<span className="text-[10px] text-ink-faint">{describeJobStatus(step.status)}</span>
+							<span className="text-sm text-ink-faint">{describeJobStatus(step.status)}</span>
 						</li>
 					))}
 				</ul>
 			) : (
-				<p className="tabular mt-1 font-mono text-[10px] text-ink-faint">
+				<p className="tabular mt-1 font-mono text-sm text-ink-faint">
 					{total ? `${done}/${total} steps` : 'no steps'}
 				</p>
 			)}

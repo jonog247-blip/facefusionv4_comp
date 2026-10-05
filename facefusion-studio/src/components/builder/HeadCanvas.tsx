@@ -160,10 +160,10 @@ export const HeadCanvas = ({
 	return (
 		<div
 			className={cxCanvas(className)}
-			style={{ height: 236 }}
+			style={{ height: 320 }}
 		>
 		{!supported ? (
-			<div className="grid h-full place-items-center px-4 text-center text-[11px] text-ink-faint">
+			<div className="grid h-full place-items-center px-4 text-center text-sm text-ink-faint">
 				WebGL is unavailable in this browser — the angle list below still drives the router.
 			</div>
 		) : (
@@ -195,10 +195,10 @@ export const HeadCanvas = ({
 		</Suspense>
 		)}
 		<div className="pointer-events-none absolute inset-x-0 top-2.5 flex items-center justify-between px-3">
-			<span className="rounded-full border border-white/10 bg-black/50 px-2 py-[3px] text-[10px] font-medium text-ink-soft backdrop-blur">
+			<span className="rounded-full border border-white/10 bg-black/50 px-2 py-[3px] text-sm font-medium text-ink-soft backdrop-blur">
 				{angles.length} angle{angles.length === 1 ? '' : 's'} synced
 			</span>
-			<span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-faint">Drag to rotate</span>
+			<span className="text-sm font-semibold uppercase tracking-[0.12em] text-ink-faint">Drag to rotate</span>
 		</div>
 		</div>
 	);

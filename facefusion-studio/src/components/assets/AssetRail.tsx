@@ -55,10 +55,10 @@ const AssetRow = ({
 				<AssetThumb asset={asset} url={url} />
 				<span className="min-w-0 flex-1">
 					<span className="flex items-center gap-1.5">
-						<span className="truncate text-[11px] font-medium text-ink">{asset.name}</span>
+						<span className="truncate text-sm font-medium text-ink">{asset.name}</span>
 						{asset.type === 'output' ? <Badge tone="success">out</Badge> : null}
 					</span>
-					<span className="tabular mt-0.5 block truncate font-mono text-[10px] text-ink-faint">
+					<span className="tabular mt-0.5 block truncate font-mono text-sm text-ink-faint">
 						{asset.media} · {asset.format} · {formatBytes(asset.size)}
 					</span>
 				</span>
@@ -253,7 +253,7 @@ export const AssetRail = () => {
 							{[...routedIds].map((id) => {
 								const asset = sources.find((entry) => entry.id === id);
 								return (
-									<li key={id} className="truncate rounded-lg bg-white/[0.04] px-2 py-1 font-mono text-[10px] text-ink-soft">
+									<li key={id} className="truncate rounded-lg bg-white/[0.04] px-2 py-1 font-mono text-sm text-ink-soft">
 										{asset?.name ?? id}
 									</li>
 								);

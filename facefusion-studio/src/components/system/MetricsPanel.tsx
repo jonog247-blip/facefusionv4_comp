@@ -29,7 +29,7 @@ const Section = ({
 				<KeyValue key={index} label={`unit ${entry.unit}`} value={`${entry.value} ${entry.unit}`} />
 			))
 		) : (
-			<p className="text-[11px] text-ink-faint">no data</p>
+			<p className="text-sm text-ink-faint">no data</p>
 		)}
 	</div>
 );
